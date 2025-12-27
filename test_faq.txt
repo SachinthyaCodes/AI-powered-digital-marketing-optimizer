@@ -1,0 +1,16 @@
+FAQ Document
+
+Q: What are your business hours?
+A: We are open Monday to Friday from 9 AM to 6 PM, and Saturday from 10 AM to 4 PM. We are closed on Sundays.
+
+Q: Do you offer free shipping?
+A: Yes, we offer free shipping on orders over $50 within the continental US.
+
+Q: What is your return policy?
+A: We accept returns within 30 days of purchase. Items must be in original condition with tags attached.
+
+Q: How can I track my order?
+A: Once your order ships, you will receive an email with tracking information. You can also check your order status in your account dashboard.
+
+Q: Do you accept international orders?
+A: Currently, we only ship within the United States. We are working on expanding international shipping options.
