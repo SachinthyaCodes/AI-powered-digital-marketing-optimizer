@@ -1,0 +1,80 @@
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.recommendation-item {
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-left: 5px solid #667eea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.recommendation-item:hover {
+  transform: translateX(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.recommendation-item.impact-high {
+  border-left-color: #e74c3c;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+}
+
+.recommendation-item.impact-medium {
+  border-left-color: #f39c12;
+  background: linear-gradient(135deg, #fffbf5 0%, #fff3e0 100%);
+}
+
+.recommendation-item.impact-low {
+  border-left-color: #3498db;
+  background: linear-gradient(135deg, #f5f9ff 0%, #e3f2fd 100%);
+}
+
+.recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recommendation-category {
+  font-weight: 800;
+  color: #1a1a2e;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+}
+
+.impact-badge {
+  padding: 6px 16px;
+  border-radius: 24px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.impact-badge.impact-high {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.impact-badge.impact-medium {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+.impact-badge.impact-low {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.recommendation-text {
+  color: #4a5568;
+  line-height: 1.7;
+  font-size: 0.95rem;
+  font-weight: 500;
+}

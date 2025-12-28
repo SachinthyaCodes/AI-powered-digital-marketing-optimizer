@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Flask
+instance/
+.webassets-cache
+
+# Temporary files
+temp_image.jpg
+*.tmp
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+
+# Model files (if too large for git)
+# backend/SavedModels/*.keras
+# backend/SavedModels/*.pkl
+
+# Datasets (if sensitive)
+# backend/Datasets/*.xlsx

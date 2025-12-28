@@ -1,0 +1,241 @@
+/* =========================
+   Theme Variables
+========================= */
+:root {
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --secondary: #6b7280;
+  --bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --border: #e5e7eb;
+  --text: #000000;        /* FORCE BLACK TEXT */
+  --muted: #374151;       /* Dark gray for subtitle */
+  --error: #dc2626;
+  --radius: 10px;
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   Page Centering
+========================= */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* =========================
+   App Title Section
+========================= */
+.app-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #000000;            /* BLACK */
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.app-subtitle {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #111827;            /* DARK BLACK-GRAY */
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+/* =========================
+   Form Card
+========================= */
+.form-section {
+  background: var(--card-bg);
+  padding: 30px 34px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 880px;
+}
+
+/* =========================
+   Form Heading
+========================= */
+.form-section h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 26px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 10px;
+}
+
+/* =========================
+   Form Groups
+========================= */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #000000;
+}
+
+/* =========================
+   Inputs
+========================= */
+input,
+textarea,
+select {
+  padding: 11px 12px;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #000000;
+  transition: all 0.2s ease;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+}
+
+/* Focus */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* =========================
+   Grid Rows
+========================= */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+/* =========================
+   Checkbox (Ad Boost)
+========================= */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #000000;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.checkbox-text {
+  font-size: 0.95rem;
+}
+
+/* =========================
+   Error Message
+========================= */
+.error-message {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--error);
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+/* =========================
+   Buttons
+========================= */
+.button-group {
+  display: flex;
+  gap: 14px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Primary */
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Secondary */
+.btn-secondary {
+  background: #f3f4f6;
+  color: #000000;
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 600px) {
+  body {
+    justify-content: flex-start;
+    padding: 20px;
+  }
+
+  .app-title {
+    font-size: 1.6rem;
+  }
+
+  .app-subtitle {
+    font-size: 1rem;
+  }
+
+  .form-section {
+    padding: 24px 20px;
+  }
+}

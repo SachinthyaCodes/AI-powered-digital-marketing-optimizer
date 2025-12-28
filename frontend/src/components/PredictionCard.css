@@ -1,0 +1,91 @@
+.prediction-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 28px 24px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.prediction-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: pulse-ring 3s infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.prediction-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(102, 126, 234, 0.4);
+}
+
+.prediction-card.likes {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.prediction-card.comments {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.prediction-card.shares {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.prediction-card.clicks {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.prediction-card.quality {
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.prediction-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.prediction-label {
+  font-size: 0.9rem;
+  opacity: 0.95;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.prediction-value {
+  font-size: 2.4rem;
+  font-weight: 900;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  letter-spacing: -1px;
+}

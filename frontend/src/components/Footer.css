@@ -1,0 +1,25 @@
+.app-footer {
+  text-align: center;
+  color: white;
+  margin-top: 60px;
+  padding: 32px 24px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 60px;
+}
+
+.app-footer p {
+  background: linear-gradient(135deg, #fff 0%, #a8edea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
