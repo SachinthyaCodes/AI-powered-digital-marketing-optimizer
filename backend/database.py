@@ -83,15 +83,16 @@ def init_db():
     Run this once at startup
     """
     try:
-        # Enable pgvector extension
-        with engine.connect() as conn:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-            conn.commit()
+        # Enable pgvector extension (only for PostgreSQL)
+        if not USE_SQLITE:
+            with engine.connect() as conn:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                conn.commit()
+            print("✅ pgvector extension enabled")
         
         # Create all tables
         Base.metadata.create_all(bind=engine)
         print("✅ Database initialized - all tables created")
-        print("✅ pgvector extension enabled")
         return True
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")

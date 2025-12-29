@@ -4,7 +4,7 @@ Production server runner for MarketMatic Backend
 """
 from flask import Flask, jsonify
 from flask_cors import CORS
-from database import db_instance
+from database import test_connection, init_db
 from routes.auth_routes import auth_bp
 from routes.superadmin_routes import superadmin_auth_bp
 from routes.service_routes import service_bp
@@ -25,6 +25,14 @@ def create_app():
         }
     })
 
+    # Initialize database
+    print("Initializing database...")
+    if test_connection():
+        init_db()
+        print("✅ Database ready")
+    else:
+        print("⚠️ Database connection issue - continuing anyway")
+
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(superadmin_auth_bp)
@@ -43,15 +51,11 @@ def create_app():
 
     @app.route('/api/health')
     def health():
+        db_connected = test_connection()
         return jsonify({
             'status': 'healthy',
-            'database': 'connected' if db_instance.get_db() else 'disconnected'
+            'database': 'connected' if db_connected else 'disconnected'
         })
-
-    @app.before_request
-    def before_request():
-        """Initialize database connection before first request"""
-        db_instance.get_db()
 
     @app.teardown_appcontext
     def teardown_db(exception=None):
