@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   LogOut, Users, MessageSquare, TrendingUp, Settings,
   ShieldCheck, Store, Mail, Phone, MapPin, Calendar,
-  BarChart3, Activity, Clock, CheckCircle
+  BarChart3, Activity, Clock, CheckCircle, Sparkles
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -75,26 +75,28 @@ const AdminDashboard = () => {
   const subscriptionStatus = serviceInfo ? getSubscriptionStatus() : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen gradient-bg">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+      <header className="glass-card sticky top-0 z-20 border-b border-gray-200/50 animate-slide-in-left" style={{ padding: '0' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-glow transform hover:scale-110 transition-all duration-300">
                 <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-base sm:text-lg font-bold text-gray-900">Admin Panel</h1>
-                <p className="text-xs text-gray-500">{user?.company_name || 'Service Management'}</p>
+                <h1 className="text-base sm:text-lg font-bold">
+                  <span className="text-gradient">Admin Panel</span>
+                </h1>
+                <p className="text-xs text-gray-600">{user?.company_name || 'Service Management'}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-white/60 rounded-xl transition-all hover:shadow-md"
             >
               <LogOut className="w-5 h-5" />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline font-medium">Logout</span>
             </button>
           </div>
         </div>
@@ -102,9 +104,9 @@ const AdminDashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.full_name}!
+        <div className="mb-6 sm:mb-8 animate-fade-in-up">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">
+            Welcome back, <span className="text-gradient">{user?.full_name}</span>!
           </h2>
           <p className="text-gray-600">
             Manage your service and engage with your customers
@@ -119,14 +121,18 @@ const AdminDashboard = () => {
             </div>
           </div>
         ) : serviceInfo ? (
-          <div className="card mb-6 sm:mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <div className="glass-card mb-6 sm:mb-8 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-blue-200/50 animate-slide-in-right">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0 mb-4">
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-                  <Store className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                  {serviceInfo.shop_name}
-                </h3>
-                <p className="text-sm text-gray-600">Service Information</p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Store className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
+                    {serviceInfo.shop_name}
+                  </h3>
+                  <p className="text-sm text-gray-600 font-medium">Service Information</p>
+                </div>
               </div>
               {subscriptionStatus && (
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -181,89 +187,70 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Demo Chatbot Button */}
-        {user && (
-          <div className="mb-6 sm:mb-8">
-            <button
-              onClick={() => {
-                console.log('Button clicked - User object:', user);
-                const serviceId = user.service_id || serviceInfo?._id || serviceInfo?.service_id;
-                console.log('Service ID to use:', serviceId);
-                if (!serviceId) {
-                  alert('Service ID not found. Please try refreshing the page.');
-                  return;
-                }
-                console.log('Navigating to:', `/demo/chat/${serviceId}`);
-                navigate(`/demo/chat/${serviceId}`);
-              }}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                <div className="text-left">
-                  <div className="font-bold text-lg">View Chatbot Demo</div>
-                  <div className="text-sm text-indigo-100">See your AI assistant in action with SinLlama</div>
-                </div>
-              </div>
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        )}
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <Users className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 opacity-60" />
+          <div className="stat-card border-l-blue-500 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-glow animate-fade-in-up" style={{ animationDelay: '0.1s', opacity: 0, animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <Users className="w-6 h-6" />
+              </div>
+              <TrendingUp className="w-5 h-5 opacity-70" />
             </div>
-            <p className="text-xs sm:text-sm opacity-90 mb-1">Total Customers</p>
-            <p className="text-2xl sm:text-3xl font-bold">{stats.totalCustomers}</p>
+            <p className="text-xs sm:text-sm font-semibold opacity-90 mb-1">Total Customers</p>
+            <p className="text-3xl sm:text-4xl font-bold">{stats.totalCustomers}</p>
           </div>
 
-          <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-              <Activity className="w-4 h-4 sm:w-5 sm:h-5 opacity-60" />
+          <div className="stat-card border-l-green-500 bg-gradient-to-br from-green-500 to-green-600 text-white shadow-glow animate-fade-in-up" style={{ animationDelay: '0.2s', opacity: 0, animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <Activity className="w-5 h-5 opacity-70" />
             </div>
-            <p className="text-xs sm:text-sm opacity-90 mb-1">Active Chats</p>
-            <p className="text-2xl sm:text-3xl font-bold">{stats.activeChats}</p>
+            <p className="text-xs sm:text-sm font-semibold opacity-90 mb-1">Active Chats</p>
+            <p className="text-3xl sm:text-4xl font-bold">{stats.activeChats}</p>
           </div>
 
-          <div className="card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 opacity-60" />
+          <div className="stat-card border-l-purple-500 bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-glow-purple animate-fade-in-up" style={{ animationDelay: '0.3s', opacity: 0, animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <Clock className="w-5 h-5 opacity-70" />
             </div>
-            <p className="text-xs sm:text-sm opacity-90 mb-1">Monthly Messages</p>
-            <p className="text-2xl sm:text-3xl font-bold">{stats.monthlyMessages}</p>
+            <p className="text-xs sm:text-sm font-semibold opacity-90 mb-1">Monthly Messages</p>
+            <p className="text-3xl sm:text-4xl font-bold">{stats.monthlyMessages}</p>
           </div>
 
-          <div className="card bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 opacity-60" />
+          <div className="stat-card border-l-orange-500 bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-glow animate-fade-in-up" style={{ animationDelay: '0.4s', opacity: 0, animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6" />
+              </div>
+              <TrendingUp className="w-5 h-5 opacity-70" />
             </div>
-            <p className="text-xs sm:text-sm opacity-90 mb-1">Response Rate</p>
-            <p className="text-2xl sm:text-3xl font-bold">{stats.responseRate}%</p>
+            <p className="text-xs sm:text-sm font-semibold opacity-90 mb-1">Response Rate</p>
+            <p className="text-3xl sm:text-4xl font-bold">{stats.responseRate}%</p>
           </div>
         </div>
 
         {/* Demo Chatbot Button */}
         {user?.service_id && (
-          <div className="mb-6">
+          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.5s', opacity: 0, animationFillMode: 'forwards' }}>
             <button
               onClick={() => navigate(`/demo/chat/${user.service_id}`)}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
+              className="w-full glass-card bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-5 hover:from-indigo-700 hover:to-purple-700 shadow-glow-purple flex items-center justify-between group border-none"
             >
-              <MessageSquare className="w-6 h-6 group-hover:scale-110 transition-transform" />
-              <div className="text-left">
-                <div className="font-bold text-lg">View Chatbot Demo</div>
-                <div className="text-sm text-indigo-100">See your AI assistant in action with SinLlama</div>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-7 h-7" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-xl mb-1">View Chatbot Demo</div>
+                  <div className="text-sm text-indigo-100">See your AI assistant in action with SinLlama</div>
+                </div>
               </div>
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -274,100 +261,105 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <button 
             onClick={() => navigate('/admin/bot-management')}
-            className="card hover:shadow-lg transition-shadow text-left group"
+            className="feature-card group text-left"
           >
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors flex-shrink-0">
-                <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg flex-shrink-0">
+                <MessageSquare className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Chatbot Manager</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Configure and train your AI chatbot</p>
+                <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base group-hover:text-blue-600 transition-colors">Chatbot Manager</h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Configure and train your AI chatbot</p>
               </div>
             </div>
           </button>
 
-          <button className="card hover:shadow-lg transition-shadow text-left group">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors flex-shrink-0">
-                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+          <button className="feature-card text-left">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg flex-shrink-0">
+                <Users className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Customer Database</h3>
-                <p className="text-xs sm:text-sm text-gray-600">View and manage customer data</p>
+                <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base group-hover:text-green-600 transition-colors">Customer Database</h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">View and manage customer data</p>
               </div>
             </div>
           </button>
 
           <button 
             onClick={() => navigate('/admin/chat-analytics')}
-            className="card hover:shadow-lg transition-shadow text-left group">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors flex-shrink-0">
-                <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+            className="feature-card text-left">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg flex-shrink-0">
+                <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Chat Analytics</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Track chatbot performance and insights</p>
+                <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base group-hover:text-purple-600 transition-colors">Chat Analytics</h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Track chatbot performance and insights</p>
               </div>
             </div>
           </button>
 
-          <button className="card hover:shadow-lg transition-shadow text-left group">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors flex-shrink-0">
-                <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+          <button className="feature-card text-left">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg flex-shrink-0">
+                <Settings className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Service Settings</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Customize your service preferences</p>
+                <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base group-hover:text-orange-600 transition-colors">Service Settings</h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Customize your service preferences</p>
               </div>
             </div>
           </button>
 
           <button 
             onClick={() => navigate('/admin/vector-database')}
-            className="card hover:shadow-lg transition-shadow text-left group">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-200 transition-colors flex-shrink-0">
-                <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+            className="feature-card text-left">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg flex-shrink-0">
+                <Activity className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Vector Database</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Manage AI semantic search</p>
+                <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base group-hover:text-indigo-600 transition-colors">Vector Database</h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Manage AI semantic search</p>
               </div>
             </div>
           </button>
 
-          <button className="card hover:shadow-lg transition-shadow text-left group">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-xl flex items-center justify-center group-hover:bg-pink-200 transition-colors flex-shrink-0">
-                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
+          <button className="feature-card text-left">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg flex-shrink-0">
+                <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Marketing Tools</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Engage and grow your audience</p>
+                <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base group-hover:text-pink-600 transition-colors">Marketing Tools</h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Engage and grow your audience</p>
               </div>
             </div>
           </button>
         </div>
 
         {/* Recent Activity */}
-        <div className="card">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-4">
+        <div className="card animate-fade-in-up" style={{ animationDelay: '0.6s', opacity: 0, animationFillMode: 'forwards' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-500 rounded-xl flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">Recent Activity</h3>
+          </div>
+          <div className="space-y-3">
             {[
               { action: 'New customer registered', time: '5 minutes ago', icon: Users, color: 'blue' },
               { action: 'Chatbot responded to 3 queries', time: '15 minutes ago', icon: MessageSquare, color: 'green' },
               { action: 'Service settings updated', time: '1 hour ago', icon: Settings, color: 'purple' },
               { action: 'Monthly report generated', time: '2 hours ago', icon: BarChart3, color: 'orange' },
             ].map((item, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className={`w-10 h-10 bg-${item.color}-100 rounded-lg flex items-center justify-center`}>
-                  <item.icon className={`w-5 h-5 text-${item.color}-600`} />
+              <div key={index} className="flex items-center gap-3 p-4 bg-gradient-to-r from-gray-50 to-transparent rounded-xl hover:from-gray-100 transition-all cursor-pointer group">
+                <div className={`w-10 h-10 bg-gradient-to-br from-${item.color}-500 to-${item.color}-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                  <item.icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{item.action}</p>
+                  <p className="text-sm font-semibold text-gray-900">{item.action}</p>
                   <p className="text-xs text-gray-500">{item.time}</p>
                 </div>
               </div>

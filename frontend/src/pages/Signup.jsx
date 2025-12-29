@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, Building2, AlertCircle, Loader2, Key, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, Building2, AlertCircle, Loader2, Key, ShieldCheck, Sparkles } from 'lucide-react';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -77,42 +77,51 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-50 px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center gradient-bg px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="max-w-md w-full relative z-10 animate-fade-in-up">
         {/* Logo and Title */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-primary-600 rounded-2xl mb-3 sm:mb-4">
-            <span className="text-xl sm:text-2xl font-bold text-white">M</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary-600 to-purple-600 rounded-2xl mb-4 shadow-glow transform hover:scale-110 transition-all duration-300">
+            <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-600">Join MarketMatic and grow your business</p>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+            <span className="text-gradient">Create Account</span>
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">Join MarketMatic and grow your business</p>
         </div>
 
         {/* Signup Form */}
-        <div className="card">
+        <div className="glass-card">
           {/* Admin Toggle */}
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-200/50 rounded-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck className={`w-5 h-5 ${isAdmin ? 'text-blue-600' : 'text-gray-400'}`} />
-                <span className="font-medium text-gray-900">Register as Admin</span>
+                <ShieldCheck className={`w-5 h-5 transition-colors ${isAdmin ? 'text-blue-600' : 'text-gray-400'}`} />
+                <span className="font-semibold text-gray-900">Register as Admin</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAdmin(!isAdmin)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isAdmin ? 'bg-blue-600' : 'bg-gray-300'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${
+                  isAdmin ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md' : 'bg-gray-300'
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
                     isAdmin ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
             </div>
             {isAdmin && (
-              <p className="text-xs text-blue-700 mt-2">
+              <p className="text-xs text-blue-700 mt-2 animate-slide-in-right">
                 You'll need a valid service token provided by your service administrator
               </p>
             )}
@@ -121,26 +130,26 @@ const Signup = () => {
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 animate-slide-in-right">
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 <p className="text-sm">{error}</p>
               </div>
             )}
 
             {/* Full Name */}
-            <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label htmlFor="full_name" className="block text-sm font-semibold text-gray-700">
                 Full Name <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors group-focus-within:text-primary-600" />
                 <input
                   type="text"
                   id="full_name"
                   name="full_name"
                   value={formData.full_name}
                   onChange={handleChange}
-                  className="input pl-11"
+                  className="input pl-12 group-focus-within:border-primary-500"
                   placeholder="John Doe"
                   required
                 />
@@ -148,19 +157,19 @@ const Signup = () => {
             </div>
 
             {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
                 Email Address <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors group-focus-within:text-primary-600" />
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="input pl-11"
+                  className="input pl-12 group-focus-within:border-primary-500"
                   placeholder="john@company.com"
                   required
                 />
@@ -168,19 +177,19 @@ const Signup = () => {
             </div>
 
             {/* Company Name */}
-            <div>
-              <label htmlFor="company_name" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label htmlFor="company_name" className="block text-sm font-semibold text-gray-700">
                 Company Name (Optional)
               </label>
-              <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="relative group">
+                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors group-focus-within:text-primary-600" />
                 <input
                   type="text"
                   id="company_name"
                   name="company_name"
                   value={formData.company_name}
                   onChange={handleChange}
-                  className="input pl-11"
+                  className="input pl-12 group-focus-within:border-primary-500"
                   placeholder="Your Company"
                 />
               </div>

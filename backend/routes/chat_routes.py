@@ -5,11 +5,15 @@ Uses Ollama with Llama3 for AI-powered conversations
 from flask import Blueprint, request, jsonify
 from database import SessionLocal
 from models.sqlalchemy_models import ChatMessage, Service, FAQ, Product, Policy, User
+from services.ollama_service import OllamaService
 from datetime import datetime
 import uuid
 import json
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/api/chat')
+
+# Initialize Ollama service
+ollama_service = OllamaService()
 
 def get_business_context(service_id: uuid.UUID) -> str:
     """
@@ -123,9 +127,27 @@ def send_chat_message():
             ChatMessage.service_id == user_msg.service_id
         ).order_by(ChatMessage.created_at.desc()).limit(6).all()
         
-        # For now, return a simple acknowledgment
-        # In a real system, you would call Ollama here
-        response_message = f"I received your message: '{user_message}'. Let me process this with the business context."
+        # Format conversation history for Ollama
+        conversation_history = []
+        for msg in reversed(recent_messages[-5:]):  # Last 5 messages in order
+            conversation_history.append({
+                'role': msg.sender,
+                'content': msg.message
+            })
+        
+        # Generate AI response using Ollama Llama3
+        try:
+            response_message = ollama_service.generate_chat_response(
+                query=user_message,
+                context=business_context,
+                conversation_history=conversation_history,
+                language='mixed',  # Support both English and Sinhala
+                max_tokens=300,
+                temperature=0.7
+            )
+        except Exception as e:
+            print(f"❌ Ollama error: {e}")
+            response_message = "I'm experiencing technical difficulties. Please try again in a moment."
         
         # Store bot response
         bot_msg = ChatMessage(
@@ -200,6 +222,7 @@ def test_chat():
 def send_demo_message():
     """
     Demo endpoint - sends a message without requiring authentication
+    Uses Ollama Llama3 for intelligent responses
     """
     try:
         data = request.get_json()
@@ -212,10 +235,49 @@ def send_demo_message():
         if not user_message:
             return jsonify({'error': 'Message cannot be empty'}), 400
         
-        # Simple echo response for demo
+        # Demo context
+        demo_context = """
+        === Demo Business Information ===
+        
+        Welcome to MarketMatic Demo!
+        
+        FAQs:
+        Q: What is MarketMatic?
+        A: MarketMatic is an AI-powered digital marketing optimizer that helps businesses automate customer interactions and improve engagement.
+        
+        Q: How does the chatbot work?
+        A: Our chatbot uses advanced AI (Llama3) to understand and respond to customer queries in both English and Sinhala.
+        
+        Products:
+        - Basic Plan: Rs. 2,500/month - For small businesses
+        - Pro Plan: Rs. 5,000/month - Advanced features
+        - Enterprise Plan: Rs. 10,000/month - Full customization
+        
+        Features:
+        - 24/7 automated customer support
+        - Multilingual support (English & Sinhala)
+        - Product recommendations
+        - Order tracking
+        - FAQ automation
+        """
+        
+        # Generate AI response using Ollama
+        try:
+            bot_response = ollama_service.generate_chat_response(
+                query=user_message,
+                context=demo_context,
+                conversation_history=None,
+                language='mixed',
+                max_tokens=200,
+                temperature=0.7
+            )
+        except Exception as e:
+            print(f"❌ Ollama demo error: {e}")
+            bot_response = "Hello! I'm the MarketMatic demo chatbot. I'm currently experiencing technical difficulties, but I'm here to help you learn about our AI-powered marketing solutions!"
+        
         return jsonify({
             'user_message': user_message,
-            'bot_response': f"Demo response to: {user_message[:50]}...",
+            'bot_response': bot_response,
             'timestamp': datetime.utcnow().isoformat()
         }), 200
         

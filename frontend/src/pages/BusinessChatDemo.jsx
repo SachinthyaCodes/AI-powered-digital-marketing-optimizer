@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MessageCircle, Send, Bot, ArrowLeft, Sparkles } from 'lucide-react';
+import { MessageCircle, Send, Bot, ArrowLeft, Sparkles, X, MinusCircle, Info, Zap } from 'lucide-react';
 import api from '../services/api';
 
 export default function BusinessChatDemo() {
@@ -11,6 +11,7 @@ export default function BusinessChatDemo() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [businessInfo, setBusinessInfo] = useState(null);
+  const [showInfo, setShowInfo] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Initialize session
@@ -56,7 +57,7 @@ export default function BusinessChatDemo() {
   const showWelcomeMessage = () => {
     const welcomeMsg = {
       id: 'welcome',
-      text: 'Hello! I\'m your AI business assistant powered by SinLlama. Ask me anything about our products, services, FAQs, or policies! (සිංහල භාෂාවෙන්ද අවශ්‍යයි)',
+      text: 'Hello! 👋 I\'m your AI business assistant. I can help you with:\n\n• Product information and recommendations\n• Frequently asked questions\n• Business policies and procedures\n• Services and pricing\n\nFeel free to ask me anything in English or Sinhala! සිංහලෙන් ද විමසන්න පුළුවන්!',
       sender: 'bot',
       timestamp: new Date()
     };
@@ -87,14 +88,19 @@ export default function BusinessChatDemo() {
         session_id: sessionId
       });
 
-      if (response.data.response) {
+      console.log('Chat response:', response.data);
+
+      if (response.data && response.data.bot_response) {
         const botMsg = {
           id: `bot_${Date.now()}`,
-          text: response.data.response,
+          text: response.data.bot_response,
           sender: 'bot',
-          timestamp: new Date(response.data.timestamp)
+          timestamp: response.data.timestamp ? new Date(response.data.timestamp) : new Date()
         };
+        console.log('Adding bot message:', botMsg);
         setMessages(prev => [...prev, botMsg]);
+      } else {
+        console.error('No response in data:', response.data);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -119,155 +125,254 @@ export default function BusinessChatDemo() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Dashboard</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
-            <h1 className="text-lg font-bold text-gray-900">Business Chatbot Demo</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Top Navigation Bar */}
+      <nav className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Back Button */}
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100/80 transition-all group"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium hidden sm:inline">Dashboard</span>
+            </button>
+
+            {/* Title */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hidden sm:block">
+                AI Assistant
+              </h1>
+            </div>
+
+            {/* Info Button */}
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100/80 transition-all"
+            >
+              <Info className="w-5 h-5" />
+              <span className="font-medium hidden sm:inline">About</span>
+            </button>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Chat Container */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
-          {/* Chat Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center">
-                <Bot className="w-8 h-8 text-indigo-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">AI Business Assistant</h2>
-                <p className="text-indigo-100 text-sm flex items-center gap-2">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  Powered by SinLlama Modal AI
-                </p>
-              </div>
-            </div>
-            {businessInfo && (
-              <div className="mt-4 p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-                <p className="text-sm text-indigo-100">
-                  This chatbot knows about your business's products, FAQs, and policies
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50" style={{ height: 'calc(100% - 200px)' }}>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[75%] px-4 py-3 rounded-2xl ${
-                    message.sender === 'user'
-                      ? 'bg-indigo-600 text-white rounded-br-sm'
-                      : message.isError
-                      ? 'bg-red-100 text-red-800 rounded-bl-sm'
-                      : 'bg-white text-gray-800 shadow-md rounded-bl-sm'
-                  }`}
-                >
-                  {message.sender === 'bot' && !message.isError && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <Bot className="w-4 h-4 text-indigo-600" />
-                      <span className="text-xs font-medium text-indigo-600">AI Assistant</span>
-                    </div>
-                  )}
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
-                  <p className={`text-xs mt-2 ${
-                    message.sender === 'user' ? 'text-indigo-200' : 'text-gray-500'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-white shadow-md rounded-2xl rounded-bl-sm px-4 py-3">
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Chat Section */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 180px)' }}>
+              {/* Chat Header */}
+              <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-5">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Bot className="w-4 h-4 text-indigo-600" />
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center ring-2 ring-white/30">
+                      <Bot className="w-7 h-7 text-white" />
                     </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white">AI Business Assistant</h2>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                        <span className="text-xs text-blue-100">Online & Ready</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30">
+                    <Zap className="w-4 h-4 text-yellow-300" />
+                    <span className="text-xs font-medium text-white">Powered by SinLlama</span>
                   </div>
                 </div>
               </div>
-            )}
 
-            <div ref={messagesEndRef} />
-          </div>
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white custom-scrollbar">
+                <div className="space-y-4">
+                  {messages.map((message, index) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <div className={`flex gap-3 max-w-[85%] ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                        {/* Avatar */}
+                        {message.sender === 'bot' && (
+                          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                            <Bot className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                        {message.sender === 'user' && (
+                          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-700 rounded-lg flex items-center justify-center shadow-md">
+                            <span className="text-white text-sm font-semibold">You</span>
+                          </div>
+                        )}
 
-          {/* Input Area */}
-          <div className="border-t border-gray-200 p-4 bg-white">
-            <div className="flex items-end gap-3">
-              <div className="flex-1">
-                <textarea
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Ask me anything about products, FAQs, or policies..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                  rows="2"
-                  disabled={isLoading}
-                />
-                <p className="text-xs text-gray-500 mt-1 ml-1">
-                  Press Enter to send • Shift+Enter for new line
+                        {/* Message Bubble */}
+                        <div className="flex flex-col">
+                          <div
+                            className={`px-4 py-3 rounded-2xl shadow-sm ${
+                              message.sender === 'user'
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-sm'
+                                : message.isError
+                                ? 'bg-red-50 text-red-800 border border-red-200 rounded-tl-sm'
+                                : 'bg-white text-gray-800 border border-gray-200 rounded-tl-sm'
+                            }`}
+                          >
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                          </div>
+                          <span className={`text-xs mt-1 px-1 ${
+                            message.sender === 'user' ? 'text-right text-gray-500' : 'text-left text-gray-500'
+                          }`}>
+                            {message.timestamp.toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {isLoading && (
+                    <div className="flex justify-start animate-fade-in">
+                      <div className="flex gap-3 max-w-[85%]">
+                        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                          <Bot className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+
+              {/* Input Area */}
+              <div className="border-t border-gray-200 bg-white px-4 py-4">
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <textarea
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type your message here..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all bg-gray-50 hover:bg-white"
+                      rows="2"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <button
+                    onClick={sendMessage}
+                    disabled={!inputMessage.trim() || isLoading}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs">Enter</kbd> to send • <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs">Shift + Enter</kbd> for new line
                 </p>
               </div>
-              <button
-                onClick={sendMessage}
-                disabled={!inputMessage.trim() || isLoading}
-                className="bg-indigo-600 text-white p-4 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
-              >
-                <Send className="w-5 h-5" />
-              </button>
             </div>
           </div>
-        </div>
 
-        {/* Info Card */}
-        <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-100">
-          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-indigo-600" />
-            About This Chatbot
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-700">
-            <li className="flex items-start gap-2">
-              <span className="text-indigo-600 mt-0.5">•</span>
-              <span>Powered by <strong>SinLlama</strong> (Sinhala + English AI model) running on Modal</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-indigo-600 mt-0.5">•</span>
-              <span>Trained on your business's <strong>FAQs, Products, and Policies</strong></span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-indigo-600 mt-0.5">•</span>
-              <span>Supports <strong>English and Sinhala</strong> languages</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-indigo-600 mt-0.5">•</span>
-              <span>Each business gets a <strong>unique customizable</strong> chatbot</span>
-            </li>
-          </ul>
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="space-y-6">
+              {/* Quick Info Card */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="font-bold text-gray-900">Features</h3>
+                </div>
+                <ul className="space-y-3 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">✓</span>
+                    <span>Instant answers to your questions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">✓</span>
+                    <span>Product information & recommendations</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">✓</span>
+                    <span>24/7 availability</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">✓</span>
+                    <span>Bilingual support (English & Sinhala)</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* About Card (Expandable) */}
+              {showInfo && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg border border-blue-200/50 p-6 animate-fade-in-up">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                        <Info className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="font-bold text-gray-900">About This Bot</h3>
+                    </div>
+                    <button
+                      onClick={() => setShowInfo(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-3 text-sm text-gray-700">
+                    <p className="leading-relaxed">
+                      This chatbot is powered by <strong className="text-blue-600">SinLlama</strong>, an advanced AI model running on Modal infrastructure.
+                    </p>
+                    <p className="leading-relaxed">
+                      It's trained on your business's specific data including FAQs, products, and policies to provide accurate, contextual responses.
+                    </p>
+                    <div className="pt-3 border-t border-blue-200">
+                      <p className="text-xs text-gray-600">
+                        <strong>Technology:</strong> RAG-based AI • Modal Serverless • SinLlama Model
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Suggested Questions */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+                <h3 className="font-bold text-gray-900 mb-4">Try asking...</h3>
+                <div className="space-y-2">
+                  {[
+                    "What products do you offer?",
+                    "What are your business hours?",
+                    "How can I contact support?",
+                    "Tell me about pricing"
+                  ].map((question, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setInputMessage(question)}
+                      className="w-full text-left px-4 py-2.5 bg-gradient-to-r from-gray-50 to-blue-50 hover:from-blue-50 hover:to-indigo-50 rounded-lg text-sm text-gray-700 hover:text-blue-700 transition-all border border-gray-200 hover:border-blue-300 hover:shadow-md"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
