@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PredictionsGrid from './PredictionsGrid';
 import Recommendations from './Recommendations';
 import HashtagSuggestions from './HashtagSuggestions';
@@ -7,6 +7,7 @@ import FeatureImportance from './FeatureImportance';
 import './Results.css';
 
 const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
+  const [viewingPrediction, setViewingPrediction] = useState(null);
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -38,6 +39,95 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
         </div>
       )}
 
+      {/* Full Prediction Details Modal */}
+      {viewingPrediction && (
+        <div className="modal-overlay" onClick={() => setViewingPrediction(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📊 Prediction Details</h2>
+              <button className="close-modal" onClick={() => setViewingPrediction(null)}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              {/* Input Details */}
+              <div className="detail-section">
+                <h3>📝 Input Information</h3>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">Platform:</span>
+                    <span className="detail-value">{viewingPrediction.platform || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Followers:</span>
+                    <span className="detail-value">{viewingPrediction.followers?.toLocaleString() || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Ad Boost:</span>
+                    <span className="detail-value">{viewingPrediction.ad_boost ? '✅ Yes' : '❌ No'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Post Time:</span>
+                    <span className="detail-value">{viewingPrediction.post_time || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Post Date:</span>
+                    <span className="detail-value">{viewingPrediction.post_date || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item full-width">
+                    <span className="detail-label">Caption:</span>
+                    <span className="detail-value">{viewingPrediction.caption || 'No caption'}</span>
+                  </div>
+                  <div className="detail-item full-width">
+                    <span className="detail-label">Content:</span>
+                    <span className="detail-value">{viewingPrediction.content || 'No content'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Predictions */}
+              {viewingPrediction.predictions && (
+                <div className="detail-section">
+                  <h3>📈 Predictions</h3>
+                  <PredictionsGrid predictions={viewingPrediction.predictions} />
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {viewingPrediction.recommendations && (
+                <div className="detail-section">
+                  <h3>💡 Recommendations</h3>
+                  <Recommendations recommendations={viewingPrediction.recommendations} />
+                </div>
+              )}
+
+              {/* Hashtag Suggestions */}
+              {viewingPrediction.hashtag_suggestions && (
+                <div className="detail-section">
+                  <h3>🏷️ Hashtag Suggestions</h3>
+                  <HashtagSuggestions hashtags={viewingPrediction.hashtag_suggestions} />
+                </div>
+              )}
+
+              {/* Timing Analysis */}
+              {viewingPrediction.timing_analysis && (
+                <div className="detail-section">
+                  <h3>⏰ Timing Analysis</h3>
+                  <TimingAnalysis timingAnalysis={viewingPrediction.timing_analysis} />
+                </div>
+              )}
+
+              {/* Feature Importance */}
+              {viewingPrediction.feature_importance && (
+                <div className="detail-section">
+                  <h3>🎯 Feature Importance</h3>
+                  <FeatureImportance featureImportance={viewingPrediction.feature_importance} />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Prediction History */}
       <div className="history-section">
         <h2>📜 Prediction History</h2>
@@ -54,13 +144,22 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
                 <div className="history-header">
                   <span className="history-number">#{index + 1}</span>
                   <span className="history-date">{formatDate(prediction.created_at)}</span>
-                  <button 
-                    className="delete-btn"
-                    onClick={() => onDelete(prediction._id)}
-                    title="Delete this prediction"
-                  >
-                    🗑️ Delete
-                  </button>
+                  <div className="history-actions">
+                    <button 
+                      className="view-btn"
+                      onClick={() => setViewingPrediction(prediction)}
+                      title="View full details"
+                    >
+                      👁️ View
+                    </button>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => onDelete(prediction._id)}
+                      title="Delete this prediction"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
                 </div>
 
                 <div className="history-content">
