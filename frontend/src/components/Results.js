@@ -92,10 +92,10 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
                 </div>
               )}
 
-              {/* Recommendations */}
+              {/* AI-Powered Recommendations */}
               {viewingPrediction.recommendations && (
                 <div className="detail-section">
-                  <h3>💡 Recommendations</h3>
+                  <h3>💡 AI-Powered Recommendations</h3>
                   <Recommendations recommendations={viewingPrediction.recommendations} />
                 </div>
               )}
@@ -108,10 +108,10 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
                 </div>
               )}
 
-              {/* Timing Analysis */}
+              {/* Optimal Posting Times Analysis */}
               {viewingPrediction.timing_analysis && (
                 <div className="detail-section">
-                  <h3>⏰ Timing Analysis</h3>
+                  <h3>⏰ Optimal Posting Times Analysis</h3>
                   <TimingAnalysis timingAnalysis={viewingPrediction.timing_analysis} />
                 </div>
               )}
