@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 import Header from './components/Header';
@@ -25,6 +25,46 @@ function App() {
   const [extracting, setExtracting] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [predictionHistory, setPredictionHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  // Load prediction history on mount
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const response = await axios.get(`${API_BASE_URL}/history`);
+      if (response.data.success) {
+        setPredictionHistory(response.data.history);
+      }
+    } catch (err) {
+      console.error('Error loading history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const deletePrediction = async (predictionId) => {
+    if (!window.confirm('Are you sure you want to delete this prediction?')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/history/${predictionId}`);
+      if (response.data.success) {
+        // Remove from local state
+        setPredictionHistory(prev => prev.filter(p => p._id !== predictionId));
+        // Show success message
+        alert('Prediction deleted successfully!');
+      }
+    } catch (err) {
+      console.error('Error deleting prediction:', err);
+      alert('Failed to delete prediction. Please try again.');
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -91,6 +131,8 @@ function App() {
       
       if (response.data.success) {
         setResults(response.data);
+        // Reload history to show the new prediction
+        loadHistory();
       }
     } catch (err) {
       console.error('Prediction error:', err);
@@ -134,7 +176,12 @@ function App() {
           onReset={resetForm}
         />
 
-        <Results results={results} />
+        <Results 
+          results={results} 
+          predictionHistory={predictionHistory}
+          loadingHistory={loadingHistory}
+          onDelete={deletePrediction}
+        />
       </div>
 
       <Footer />

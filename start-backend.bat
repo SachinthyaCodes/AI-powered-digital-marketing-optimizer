@@ -4,15 +4,8 @@ echo.
 
 cd backend
 
-REM Check if virtual environment exists
-if not exist "venv" (
-    echo ❌ Virtual environment not found. Please run setup.bat first.
-    pause
-    exit /b 1
-)
-
-REM Activate virtual environment
-call venv\Scripts\activate.bat
+REM Use the short-path TensorFlow environment
+set PYTHON_PATH=C:\tfenv\Scripts\python.exe
 
 REM Check if models exist
 if not exist "SavedModels\Transformer.keras" (
@@ -36,6 +29,6 @@ if not exist "SavedModels\y_scaler.pkl" (
 
 echo ✅ Starting Flask server on http://localhost:5000
 echo.
-python app.py
+%PYTHON_PATH% app.py
 
 pause

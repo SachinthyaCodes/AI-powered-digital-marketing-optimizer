@@ -23,18 +23,22 @@ const PredictionsGrid = ({ predictions }) => {
         value={predictions.shares.toLocaleString()}
         className="shares"
       />
+      
+      {/*
+<PredictionCard
+  icon="👆"
+  label="Clicks"
+  value={predictions.clicks.toLocaleString()}
+  className="clicks"
+/>
+*/}
       <PredictionCard
-        icon="👆"
-        label="Clicks"
-        value={predictions.clicks.toLocaleString()}
-        className="clicks"
-      />
-      <PredictionCard
-        icon="⭐"
-        label="Quality Score"
-        value={predictions.timing_quality_score.toFixed(2)}
-        className="quality"
-      />
+  icon="⭐"
+  label="Quality Score"
+  value={`${Math.round(predictions.timing_quality_score * 100)}%`}
+  className="quality"
+/>
+
     </div>
   );
 };

@@ -9,6 +9,8 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import pickle
 from pymongo import MongoClient
 import shap
@@ -17,6 +19,8 @@ import io
 import base64
 import easyocr
 import google.generativeai as genai
+import re
+from collections import Counter
 
 app = Flask(__name__)
 CORS(app)
@@ -57,17 +61,179 @@ inv_platform_map = {'Facebook': 0, 'Instagram': 1, 'Twitter': 2}
 targets = ["likes", "comments", "shares", "clicks", "timing_quality_score"]
 num_features = ["platform_id", "post_hour", "day_of_week", "is_weekend", "followers_log", "ad_boost"]
 
-# Hashtag suggestions database (can be extended)
-HASHTAG_SUGGESTIONS = {
-    'food': ['#foodie', '#delicious', '#yummy', '#foodporn', '#instafood', '#foodlover'],
-    'travel': ['#travel', '#wanderlust', '#explore', '#adventure', '#travelgram', '#vacation'],
-    'fashion': ['#fashion', '#style', '#ootd', '#fashionista', '#fashionblogger', '#trendy'],
-    'fitness': ['#fitness', '#gym', '#workout', '#fitfam', '#health', '#motivation'],
-    'technology': ['#tech', '#technology', '#innovation', '#gadgets', '#digital', '#future'],
-    'business': ['#business', '#entrepreneur', '#marketing', '#success', '#startup', '#leadership'],
-    'beauty': ['#beauty', '#makeup', '#skincare', '#beautytips', '#glam', '#cosmetics'],
-    'photography': ['#photography', '#photooftheday', '#instagood', '#picoftheday', '#photographer', '#camera'],
+# Comprehensive Trending Hashtag Database - Categorized by Topics and Keywords
+COMPREHENSIVE_HASHTAG_DATABASE = {
+    # Food & Cuisine
+    'food': ['#foodie', '#foodporn', '#instafood', '#delicious', '#yummy', '#foodlover', '#foodstagram', '#foodgasm', '#homemade', '#cooking', '#recipe', '#chef', '#tasty', '#foodblogger', '#eat', '#foodphotography'],
+    'eating': ['#foodie', '#delicious', '#yummy', '#tasty', '#eat', '#eating', '#foodlover', '#instafood', '#foodstagram'],
+    'restaurant': ['#restaurant', '#dining', '#foodie', '#lunch', '#dinner', '#breakfast', '#brunch', '#foodlover', '#eatout', '#finedining', '#restaurantlife'],
+    'dessert': ['#dessert', '#sweet', '#cake', '#chocolate', '#icecream', '#pastry', '#baking', '#sweettooth', '#yummy', '#delicious', '#dessertlover'],
+    'pizza': ['#pizza', '#pizzalover', '#pizzatime', '#pizzeria', '#foodie', '#delicious', '#italianfood', '#pizzalovers', '#instafood'],
+    'healthy': ['#healthyfood', '#healthy', '#nutrition', '#wellness', '#cleaneating', '#organic', '#vegan', '#vegetarian', '#healthylifestyle', '#diet', '#healthyeating'],
+    'recipe': ['#recipe', '#recipes', '#cooking', '#homemade', '#foodie', '#instafood', '#cookingathome', '#delicious', '#foodblogger'],
+    
+    # Office & Business Products
+    'office': ['#office', '#officelife', '#workspace', '#work', '#business', '#officedecor', '#officedesign', '#desk', '#officespace', '#working'],
+    'chair': ['#chair', '#officechair', '#furniture', '#comfort', '#seating', '#ergonomic', '#design', '#interiordesign', '#homedecor'],
+    'furniture': ['#furniture', '#furnituredesign', '#interiordesign', '#homedecor', '#design', '#interior', '#home', '#decor', '#modern', '#style'],
+    'ergonomic': ['#ergonomic', '#comfort', '#health', '#design', '#furniture', '#office', '#wellness', '#posture', '#productivity'],
+    'comfortable': ['#comfortable', '#comfort', '#cozy', '#relaxing', '#lifestyle', '#home', '#design', '#quality', '#luxury'],
+    'productivity': ['#productivity', '#productive', '#efficiency', '#work', '#success', '#business', '#goals', '#motivation', '#hustle', '#workhard'],
+    'working': ['#working', '#work', '#worklife', '#office', '#business', '#job', '#career', '#hustle', '#grind', '#productivity'],
+    'seating': ['#seating', '#chair', '#furniture', '#comfort', '#comfortable', '#design', '#interiordesign', '#office', '#home'],
+    'available': ['#available', '#forsale', '#sale', '#selling', '#new', '#now', '#shop', '#shopping', '#buy', '#purchase'],
+    'showroom': ['#showroom', '#display', '#shop', '#store', '#retail', '#shopping', '#sale', '#new', '#products'],
+    'model': ['#model', '#design', '#style', '#new', '#latest', '#modern', '#contemporary', '#product', '#showcase'],
+    'improve': ['#improve', '#improvement', '#better', '#upgrade', '#enhance', '#quality', '#progress', '#growth', '#development'],
+    'investment': ['#investment', '#invest', '#money', '#finance', '#wealth', '#business', '#success', '#growth', '#future'],
+    'hours': ['#hours', '#time', '#schedule', '#work', '#working', '#business', '#open', '#available', '#service'],
+    
+    # Travel & Adventure
+    'travel': ['#travel', '#wanderlust', '#explore', '#adventure', '#travelgram', '#vacation', '#traveling', '#travelphotography', '#instatravel', '#traveltheworld', '#travelblogger', '#tourism', '#traveladdict'],
+    'vacation': ['#vacation', '#vacationmode', '#holiday', '#vacay', '#travel', '#vacationtime', '#getaway', '#travelgram', '#instatravel'],
+    'beach': ['#beach', '#beachlife', '#ocean', '#sea', '#sand', '#summer', '#sunset', '#tropical', '#paradise', '#island', '#beachday', '#seaside', '#beachvibes'],
+    'mountain': ['#mountain', '#mountains', '#hiking', '#nature', '#adventure', '#mountainlife', '#climbing', '#summit', '#peak', '#wilderness', '#outdoors'],
+    'city': ['#city', '#citylife', '#urban', '#architecture', '#skyline', '#downtown', '#cityphotography', '#street', '#metropolitan', '#cityscape', '#urbanphotography'],
+    'adventure': ['#adventure', '#explore', '#adventuretime', '#outdoors', '#nature', '#travel', '#wanderlust', '#exploring', '#adventureseeker'],
+    'exploring': ['#explore', '#exploring', '#adventure', '#travel', '#wanderlust', '#explorepage', '#discover', '#exploremore'],
+    
+    # Fashion & Style  
+    'fashion': ['#fashion', '#style', '#ootd', '#fashionista', '#fashionblogger', '#trendy', '#outfit', '#instafashion', '#fashionstyle', '#fashionable', '#stylish', '#fashiongram', '#styleinspo', '#fashionweek'],
+    'style': ['#style', '#fashion', '#stylish', '#instastyle', '#styleinspo', '#ootd', '#fashionstyle', '#streetstyle', '#mystyle'],
+    'outfit': ['#outfit', '#ootd', '#outfitoftheday', '#fashion', '#style', '#outfitinspiration', '#outfitinspo', '#fashionblogger'],
+    'clothing': ['#clothing', '#clothes', '#apparel', '#wear', '#outfit', '#style', '#dress', '#shirt', '#pants', '#streetstyle', '#fashion'],
+    'accessories': ['#accessories', '#jewelry', '#bag', '#shoes', '#watch', '#sunglasses', '#belt', '#scarf', '#handbag', '#earrings'],
+    'beauty': ['#beauty', '#makeup', '#skincare', '#beautytips', '#glam', '#cosmetics', '#beautyblogger', '#makeupartist', '#beautyaddict', '#makeuplover', '#skin', '#beautycommunity', '#beautygram'],
+    'trendy': ['#trendy', '#trending', '#trend', '#fashion', '#style', '#viral', '#instafashion', '#fashiontrends'],
+    
+    # Fitness & Health
+    'fitness': ['#fitness', '#fitnessmotivation', '#gym', '#workout', '#fitfam', '#health', '#fit', '#training', '#exercise', '#fitnessjourney', '#bodybuilding', '#gymlife', '#strong', '#fitlife'],
+    'workout': ['#workout', '#workoutmotivation', '#fitness', '#gym', '#training', '#exercise', '#fitfam', '#workoutroutine', '#gymtime'],
+    'gym': ['#gym', '#gymlife', '#gymmotivation', '#fitness', '#workout', '#gymtime', '#training', '#fitfam', '#gymrat'],
+    'health': ['#health', '#healthy', '#wellness', '#healthylifestyle', '#healthyliving', '#fitness', '#nutrition', '#selfcare'],
+    'yoga': ['#yoga', '#yogalife', '#yogainspiration', '#yogaeveryday', '#meditation', '#mindfulness', '#wellness', '#namaste', '#yogapractice', '#yogapose'],
+    'running': ['#running', '#runner', '#run', '#marathon', '#runningmotivation', '#instarunners', '#runhappy', '#runners', '#training', '#jogging'],
+    'sports': ['#sports', '#sport', '#athlete', '#game', '#team', '#competition', '#championship', '#athletic', '#sportslife', '#players'],
+    'building': ['#bodybuilding', '#gym', '#fitness', '#muscle', '#training', '#workout', '#fitfam', '#strong', '#gainz'],
+    'strength': ['#strength', '#strong', '#fitness', '#gym', '#workout', '#training', '#muscle', '#power', '#strengthtraining'],
+    
+    # Technology & Innovation
+    'technology': ['#tech', '#technology', '#innovation', '#gadgets', '#digital', '#future', '#techie', '#electronics', '#smartphone', '#computer', '#software', '#hardware', '#techy'],
+    'tech': ['#tech', '#technology', '#innovation', '#techie', '#gadgets', '#digital', '#techworld', '#instatech', '#technews'],
+    'ai': ['#ai', '#artificialintelligence', '#machinelearning', '#deeplearning', '#datascience', '#ml', '#tech', '#innovation', '#future', '#automation'],
+    'coding': ['#coding', '#programming', '#developer', '#code', '#programmer', '#software', '#webdevelopment', '#coder', '#development', '#tech'],
+    'startup': ['#startup', '#entrepreneur', '#business', '#innovation', '#startuplife', '#tech', '#entrepreneurship', '#smallbusiness', '#founders', '#hustle'],
+    'innovation': ['#innovation', '#technology', '#tech', '#future', '#innovative', '#startup', '#business', '#digital', '#ideas'],
+    'gadgets': ['#gadgets', '#tech', '#technology', '#electronics', '#gadget', '#techie', '#innovation', '#smartphone', '#cool'],
+    
+    # Business & Marketing
+    'business': ['#business', '#entrepreneur', '#success', '#marketing', '#startup', '#leadership', '#businessowner', '#entrepreneurship', '#motivation', '#hustle', '#businesslife', '#growth', '#strategy'],
+    'marketing': ['#marketing', '#digitalmarketing', '#socialmedia', '#contentmarketing', '#branding', '#advertising', '#seo', '#marketingstrategy', '#promotion', '#marketingtips'],
+    'entrepreneur': ['#entrepreneur', '#business', '#entrepreneurship', '#success', '#startup', '#motivation', '#hustle', '#entrepreneurlife', '#businessowner'],
+    'sales': ['#sales', '#selling', '#salesman', '#businessdevelopment', '#salestips', '#saleslife', '#entrepreneur', '#success', '#business', '#deals'],
+    'money': ['#money', '#finance', '#wealth', '#rich', '#success', '#investment', '#investing', '#financialfreedom', '#millionaire', '#entrepreneur'],
+    'success': ['#success', '#motivation', '#inspiration', '#entrepreneur', '#business', '#goals', '#mindset', '#successquotes', '#hustle'],
+    
+    # Photography & Art
+    'photography': ['#photography', '#photooftheday', '#instagood', '#picoftheday', '#photographer', '#camera', '#photo', '#photoshoot', '#naturephotography', '#portrait', '#photographylovers', '#instaphoto'],
+    'photo': ['#photo', '#photography', '#photooftheday', '#picoftheday', '#photographer', '#photoshoot', '#instaphoto', '#photos'],
+    'art': ['#art', '#artist', '#artwork', '#artistic', '#artsy', '#creative', '#creativity', '#drawing', '#painting', '#illustration', '#design', '#artoftheday', '#instaart'],
+    'design': ['#design', '#graphicdesign', '#designer', '#creative', '#logo', '#branding', '#illustration', '#designinspiration', '#webdesign', '#art'],
+    'creative': ['#creative', '#creativity', '#art', '#design', '#artist', '#creativelife', '#inspiration', '#artwork', '#create'],
+    
+    # Lifestyle & Personal
+    'lifestyle': ['#lifestyle', '#life', '#instadaily', '#instagood', '#inspiration', '#motivation', '#happy', '#love', '#photooftheday', '#beautiful', '#goals', '#vibes', '#lifestyleblogger'],
+    'life': ['#life', '#lifestyle', '#instagood', '#love', '#happy', '#motivation', '#inspiration', '#livelife', '#goodlife', '#mylife'],
+    'daily': ['#daily', '#dailylife', '#instadaily', '#instagood', '#everyday', '#lifestyle', '#life', '#motivation'],
+    'love': ['#love', '#instagood', '#photooftheday', '#beautiful', '#happy', '#cute', '#like4like', '#followme', '#picoftheday', '#smile', '#inlove'],
+    'happiness': ['#happiness', '#happy', '#smile', '#joy', '#positivity', '#positivevibes', '#blessed', '#grateful', '#goodvibes', '#happylife'],
+    'happy': ['#happy', '#happiness', '#smile', '#love', '#instagood', '#joy', '#happylife', '#positivevibes', '#blessed'],
+    'motivation': ['#motivation', '#inspiration', '#motivational', '#success', '#inspire', '#mindset', '#goals', '#hustle', '#motivationalquotes', '#nevergiveup', '#inspired', '#motivated'],
+    'inspiration': ['#inspiration', '#motivation', '#inspire', '#inspired', '#inspirational', '#motivational', '#quotes', '#goals', '#success'],
+    'goals': ['#goals', '#goal', '#motivation', '#success', '#dreams', '#achievement', '#mindset', '#lifegoals', '#inspiration'],
+    
+    # Nature & Environment
+    'nature': ['#nature', '#naturephotography', '#outdoor', '#landscape', '#wildlife', '#green', '#earth', '#environment', '#natural', '#naturelovers', '#outdoors', '#beautiful', '#scenery', '#hiking'],
+    'flowers': ['#flowers', '#flower', '#floral', '#flowerstagram', '#garden', '#blossom', '#bloom', '#botanical', '#nature', '#beautiful'],
+    'animals': ['#animals', '#animal', '#pet', '#pets', '#wildlife', '#cute', '#nature', '#dog', '#cat', '#animallovers', '#petsofinstagram'],
+    'environment': ['#environment', '#sustainability', '#ecofriendly', '#green', '#climatechange', '#savetheplanet', '#earth', '#nature', '#conservation', '#eco'],
+    
+    # Entertainment & Media
+    'music': ['#music', '#musician', '#song', '#artist', '#concert', '#live', '#band', '#guitar', '#singer', '#musiclover', '#musicproducer', '#newmusic', '#musicvideo'],
+    'movie': ['#movie', '#film', '#cinema', '#movies', '#hollywood', '#films', '#actor', '#actress', '#movienight', '#filmmaking', '#director'],
+    'gaming': ['#gaming', '#gamer', '#game', '#videogames', '#games', '#ps5', '#xbox', '#pc', '#gamers', '#twitch', '#esports', '#streamer'],
+    'entertainment': ['#entertainment', '#fun', '#funny', '#comedy', '#humor', '#laugh', '#viral', '#trending', '#memes', '#lol'],
+    
+    # Nature & Environment
+    'nature': ['#nature', '#naturephotography', '#outdoor', '#landscape', '#wildlife', '#green', '#earth', '#environment', '#natural', '#naturelovers', '#outdoors', '#beautiful', '#scenery'],
+    'outdoor': ['#outdoor', '#outdoors', '#nature', '#adventure', '#hiking', '#explore', '#wilderness', '#outdoorlife', '#outside'],
+    'flowers': ['#flowers', '#flower', '#floral', '#flowerstagram', '#garden', '#blossom', '#bloom', '#botanical', '#nature', '#beautiful', '#flowersofinstagram'],
+    'garden': ['#garden', '#gardening', '#flowers', '#plants', '#nature', '#green', '#gardenlife', '#gardenlove', '#gardeninspiration'],
+    'animals': ['#animals', '#animal', '#pet', '#pets', '#wildlife', '#cute', '#nature', '#dog', '#cat', '#animallovers', '#petsofinstagram'],
+    'environment': ['#environment', '#sustainability', '#ecofriendly', '#green', '#climatechange', '#savetheplanet', '#earth', '#nature', '#conservation', '#eco'],
+    'landscape': ['#landscape', '#landscapephotography', '#nature', '#naturephotography', '#scenery', '#beautiful', '#outdoors', '#mountains', '#travel'],
+    
+    # Entertainment & Media
+    'music': ['#music', '#musician', '#song', '#artist', '#concert', '#live', '#band', '#guitar', '#singer', '#musiclover', '#musicproducer', '#newmusic', '#musicvideo'],
+    'movie': ['#movie', '#film', '#cinema', '#movies', '#hollywood', '#films', '#actor', '#actress', '#movienight', '#filmmaking', '#director'],
+    'gaming': ['#gaming', '#gamer', '#game', '#videogames', '#games', '#ps5', '#xbox', '#pc', '#gamers', '#twitch', '#esports', '#streamer'],
+    'entertainment': ['#entertainment', '#homeentertainment', '#fun', '#enjoy', '#media', '#movies', '#music', '#gaming', '#streaming'],
+    'party': ['#party', '#partytime', '#celebration', '#fun', '#friends', '#event', '#nightlife', '#dance', '#celebrate'],
+    'fun': ['#fun', '#funny', '#entertainment', '#enjoy', '#happy', '#smile', '#lol', '#goodtimes', '#funtime'],
+    'smart': ['#smart', '#smarthome', '#technology', '#tech', '#innovation', '#iot', '#digital', '#modern', '#smartdevice'],
+    'display': ['#display', '#screen', '#monitor', '#visual', '#resolution', '#technology', '#tech', '#quality', '#hd'],
+    'definition': ['#hd', '#highdefinition', '#4k', '#uhd', '#quality', '#display', '#screen', '#resolution', '#clarity'],
+    'upgrade': ['#upgrade', '#new', '#improved', '#better', '#latest', '#modern', '#enhancement', '#technology'],
+    'experience': ['#experience', '#quality', '#lifestyle', '#enjoy', '#luxury', '#premium', '#excellence', '#amazing'],
+    'apps': ['#apps', '#application', '#software', '#technology', '#digital', '#mobile', '#tech', '#smart', '#streaming'],
+    
+    # Education & Learning
+    'education': ['#education', '#learning', '#school', '#student', '#study', '#knowledge', '#teacher', '#students', '#educational', '#learn', '#university', '#college'],
+    'learning': ['#learning', '#education', '#learn', '#knowledge', '#study', '#school', '#student', '#elearning', '#training'],
+    'student': ['#student', '#studentlife', '#students', '#school', '#study', '#education', '#university', '#college', '#learning'],
+    'tuition': ['#tuition', '#tutoring', '#education', '#learning', '#study', '#teacher', '#teaching', '#student', '#class', '#lessons'],
+    'class': ['#class', '#classroom', '#education', '#learning', '#school', '#study', '#student', '#teacher', '#teaching', '#lessons'],
+    'mathematics': ['#mathematics', '#math', '#maths', '#algebra', '#geometry', '#calculus', '#education', '#learning', '#study', '#student'],
+    'advanced': ['#advanced', '#level', '#higherlevel', '#education', '#learning', '#study', '#academic', '#excellence'],
+    'medium': ['#medium', '#education', '#learning', '#language', '#teaching', '#bilingual', '#study'],
+    'english': ['#english', '#englishlanguage', '#englishlearning', '#education', '#language', '#learning', '#study', '#esl'],
+    'sinhala': ['#sinhala', '#sinhalese', '#srilanka', '#language', '#education', '#learning', '#culture', '#sri'],
+    'town': ['#town', '#city', '#local', '#community', '#location', '#area', '#place', '#neighborhood'],
+    'results': ['#results', '#success', '#achievement', '#goals', '#progress', '#education', '#study', '#excellence'],
+    'guidance': ['#guidance', '#mentoring', '#support', '#help', '#coaching', '#advice', '#mentor', '#teacher'],
+    'books': ['#books', '#book', '#reading', '#bookstagram', '#booklover', '#read', '#bookworm', '#reader', '#literature', '#author', '#bookshelf'],
+    'reading': ['#reading', '#books', '#book', '#read', '#bookstagram', '#reader', '#booklover', '#bookworm', '#readingtime'],
+    'science': ['#science', '#research', '#scientist', '#laboratory', '#experiment', '#physics', '#chemistry', '#biology', '#scientific', '#technology'],
+    
+    # Social & Community
+    'community': ['#community', '#together', '#unity', '#family', '#friends', '#support', '#local', '#neighborhood', '#people', '#social'],
+    'friends': ['#friends', '#friendship', '#bestfriends', '#friend', '#friendsforever', '#bff', '#love', '#fun', '#happy', '#squad'],
+    'event': ['#event', '#events', '#party', '#celebration', '#festival', '#conference', '#gathering', '#fun', '#eventplanner', '#live'],
+    'celebration': ['#celebration', '#celebrate', '#party', '#event', '#happy', '#fun', '#joy', '#special', '#festive'],
+    'family': ['#family', '#familytime', '#familylove', '#kids', '#children', '#parents', '#parenting', '#mom', '#dad', '#love'],
+    
+    # Time & Moments
+    'weekend': ['#weekend', '#weekendvibes', '#weekendmood', '#saturday', '#sunday', '#weekends', '#relax', '#fun', '#enjoy'],
+    'night': ['#night', '#nightout', '#nightlife', '#nightphotography', '#nighttime', '#goodnight', '#evening', '#tonight'],
+    'morning': ['#morning', '#goodmorning', '#morningvibes', '#morningmotivation', '#sunrise', '#morningview', '#breakfast'],
+    'summer': ['#summer', '#summervibes', '#summertime', '#sunshine', '#beach', '#sun', '#vacation', '#hot', '#summerfun'],
+    'winter': ['#winter', '#wintertime', '#snow', '#cold', '#winterwonderland', '#wintervibes', '#cozy', '#winterseason'],
+    
+    # Popular & General
+    'new': ['#new', '#newin', '#newpost', '#newcollection', '#latest', '#newnew', '#fresh', '#launch'],
+    'best': ['#best', '#bestoftheday', '#bestfriend', '#bestever', '#amazing', '#awesome', '#great', '#perfect'],
+    'amazing': ['#amazing', '#awesome', '#incredible', '#wonderful', '#fantastic', '#great', '#best', '#perfect'],
+    'beautiful': ['#beautiful', '#beauty', '#gorgeous', '#pretty', '#stunning', '#lovely', '#amazing', '#photooftheday'],
+    'perfect': ['#perfect', '#perfection', '#flawless', '#amazing', '#beautiful', '#best', '#ideal', '#wonderful'],
+    'awesome': ['#awesome', '#amazing', '#incredible', '#great', '#cool', '#fantastic', '#best', '#perfect'],
+    
+    # Platform Specific & Viral
+    'instagram': ['#instagood', '#instagram', '#instadaily', '#instalike', '#instamoment', '#instapic', '#instapost', '#instacool', '#instamood', '#instafamous', '#insta', '#ig'],
+    'viral': ['#viral', '#trending', '#explorepage', '#explore', '#viralpost', '#trend', '#foryou', '#foryoupage', '#fyp', '#viralvideos'],
+    'trending': ['#trending', '#viral', '#trend', '#trendingnow', '#explorepage', '#explore', '#trendy', '#trendingpost'],
+    'explore': ['#explore', '#explorepage', '#viral', '#trending', '#discovered', '#exploremore', '#exploring', '#adventure'],
 }
+
 
 def load_models():
     """Load ML models and preprocessing utilities"""
@@ -211,21 +377,210 @@ def make_prediction(text_seq, num_data):
         print(f"Error making prediction: {e}")
         raise e
 
-def generate_hashtag_suggestions(caption, content):
-    """Generate hashtag suggestions based on caption and content"""
-    text = f"{caption} {content}".lower()
-    suggested_hashtags = []
+def extract_keywords_from_text(text):
+    """Extract important keywords from text using advanced NLP techniques"""
+    try:
+        # Clean and preprocess text
+        text_clean = re.sub(r'[^a-zA-Z\s]', ' ', text.lower())
+        text_clean = ' '.join(text_clean.split())
+        
+        # Comprehensive stop words list
+        stop_words = {'the', 'is', 'at', 'which', 'on', 'a', 'an', 'as', 'are', 'was', 'were', 
+                     'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 
+                     'should', 'could', 'may', 'might', 'must', 'can', 'of', 'for', 'to', 'in', 
+                     'by', 'with', 'from', 'and', 'or', 'but', 'not', 'this', 'that', 'these', 
+                     'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'what', 'who', 'when', 
+                     'where', 'why', 'how', 'my', 'your', 'his', 'her', 'its', 'our', 'their',
+                     'me', 'him', 'us', 'them', 'myself', 'yourself', 'himself', 'herself',
+                     'itself', 'ourselves', 'yourselves', 'themselves', 'am', 'about', 'all',
+                     'also', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some',
+                     'such', 'than', 'too', 'very', 'just', 'now', 'get', 'got', 'going',
+                     'go', 'here', 'there', 'out', 'up', 'down', 'so', 'if', 'then', 'because'}
+        
+        # Extract words
+        words = text_clean.split()
+        
+        # Filter out stop words and short words
+        keywords = [word for word in words if word not in stop_words and len(word) > 2]
+        
+        # Count word frequency
+        word_freq = Counter(keywords)
+        
+        # Get keywords sorted by frequency (more important ones first)
+        top_keywords = [word for word, count in word_freq.most_common(20)]
+        
+        return top_keywords
+    except Exception as e:
+        print(f"Error extracting keywords: {e}")
+        return []
+
+def match_hashtags_by_keywords(keywords, text, platform):
+    """Advanced hashtag matching with direct word-to-hashtag relevance"""
+    hashtag_scores = {}  # Store each unique hashtag with its total score
+    text_lower = text.lower()
+    text_words = set(text_lower.split())
     
-    # Check for keywords and suggest relevant hashtags
-    for category, hashtags in HASHTAG_SUGGESTIONS.items():
-        if category in text:
-            suggested_hashtags.extend(hashtags[:3])
+    # STEP 1: Create direct hashtags from keywords (HIGHEST PRIORITY)
+    direct_hashtags = []
+    for keyword in keywords[:15]:  # Top 15 keywords
+        # Create hashtag from keyword
+        hashtag = f"#{keyword}"
+        # Add with highest score if it seems like a real word (not location names, etc.)
+        if len(keyword) > 3:  # Minimum 4 characters
+            direct_hashtags.append((hashtag, 100))  # Highest score for direct matches
     
-    # Generic popular hashtags if no specific match
-    if not suggested_hashtags:
-        suggested_hashtags = ['#viral', '#trending', '#instagood', '#photooftheday', '#like4like']
+    # Add direct hashtags to scores
+    for hashtag, score in direct_hashtags:
+        hashtag_scores[hashtag] = score
     
-    return list(set(suggested_hashtags))[:10]
+    # STEP 2: Match from database with aggressive scoring
+    for category, hashtags in COMPREHENSIVE_HASHTAG_DATABASE.items():
+        category_score = 0
+        
+        # Score the category based on keyword and text matches
+        # 1. Direct category name appears in text
+        if category in text_lower:
+            category_score += 20
+        
+        # 2. Category matches any keyword exactly
+        for keyword in keywords:
+            if keyword == category:
+                category_score += 18
+            elif keyword in category or category in keyword:
+                category_score += 12
+        
+        # Process each hashtag in this category
+        for hashtag in hashtags:
+            hashtag_word = hashtag.replace('#', '').lower()
+            hashtag_score = category_score  # Start with category score
+            
+            # 3. EXACT hashtag word match with keywords (very high priority)
+            if hashtag_word in keywords:
+                hashtag_score += 50
+            
+            # 4. Hashtag word appears in text
+            if hashtag_word in text_lower:
+                hashtag_score += 35
+            
+            # 5. Partial word match between hashtag and keywords
+            for keyword in keywords[:15]:  # Check top 15 keywords
+                if len(keyword) > 3 and len(hashtag_word) > 3:
+                    if keyword in hashtag_word:
+                        hashtag_score += 15
+                    elif hashtag_word in keyword:
+                        hashtag_score += 15
+            
+            # 6. Hashtag word matches any word in text
+            if hashtag_word in text_words:
+                hashtag_score += 25
+            
+            # Store hashtag with its score (keep highest score if duplicate)
+            if hashtag_score > 5:  # Only include if has some relevance
+                if hashtag not in hashtag_scores or hashtag_scores[hashtag] < hashtag_score:
+                    hashtag_scores[hashtag] = hashtag_score
+    
+    # Sort hashtags by score (descending)
+    sorted_hashtags = sorted(hashtag_scores.items(), key=lambda x: x[1], reverse=True)
+    
+    # Return hashtags only (without scores)
+    return [hashtag for hashtag, score in sorted_hashtags]
+
+def generate_hashtag_suggestions(caption, content, platform):
+    """Generate 12-15 highly relevant hashtags that EXACTLY match your caption and content"""
+    try:
+        # Combine caption and content
+        full_text = f"{caption} {content}"
+        
+        if not full_text.strip():
+            return get_default_hashtags(platform)
+        
+        # Extract keywords using advanced NLP
+        keywords = extract_keywords_from_text(full_text)
+        print(f"Extracted keywords: {keywords[:15]}")
+        
+        # Match hashtags based on keywords with direct word matching
+        # This includes both direct keyword hashtags and database matches
+        matched_hashtags = match_hashtags_by_keywords(keywords, full_text, platform)
+        print(f"Matched {len(matched_hashtags)} total hashtags")
+        
+        # Remove duplicates while preserving order and relevance
+        seen = set()
+        unique_hashtags = []
+        
+        # PRIORITY 1: Add top matched hashtags (highly relevant to your content)
+        # These are sorted by relevance score, so the first ones are the best matches
+        for tag in matched_hashtags[:50]:  # Check top 50 matches
+            tag_lower = tag.lower()
+            tag_word = tag.replace('#', '').lower()
+            
+            # Skip if already seen or if it's a location-specific tag that doesn't match well
+            if tag_lower not in seen:
+                # Validate that the hashtag makes sense
+                # Include if: it's from database OR it's a keyword that's a real word
+                is_from_database = any(tag in hashtags for hashtags in COMPREHENSIVE_HASHTAG_DATABASE.values())
+                is_meaningful_keyword = len(tag_word) >= 4 and tag_word in keywords[:10]
+                
+                if is_from_database or is_meaningful_keyword:
+                    seen.add(tag_lower)
+                    unique_hashtags.append(tag)
+                    
+                    # Stop if we have enough
+                    if len(unique_hashtags) >= 12:
+                        break
+        
+        print(f"Added {len(unique_hashtags)} highly relevant hashtags")
+        
+        # PRIORITY 2: Add platform-specific hashtags (only 1-2 for context)
+        if len(unique_hashtags) < 13 and platform.lower() == 'instagram':
+            platform_tags = ['#instagood', '#instadaily']
+            for tag in platform_tags:
+                if tag.lower() not in seen and len(unique_hashtags) < 13:
+                    unique_hashtags.append(tag)
+                    seen.add(tag.lower())
+        
+        # PRIORITY 3: Add viral/trending hashtags for reach (only 2-3)
+        if len(unique_hashtags) < 15:
+            viral_tags = ['#viral', '#trending', '#explorepage']
+            for tag in viral_tags:
+                if tag.lower() not in seen and len(unique_hashtags) < 15:
+                    unique_hashtags.append(tag)
+                    seen.add(tag.lower())
+        
+        # Return 12-15 hashtags (prioritize content relevance)
+        result = unique_hashtags[:15]
+        
+        print(f"Final result: {len(result)} hashtags")
+        print(f"Hashtags: {result}")
+        return result
+        
+    except Exception as e:
+        print(f"Error generating hashtags: {e}")
+        import traceback
+        traceback.print_exc()
+        return get_default_hashtags(platform)
+        result = unique_hashtags[:15]
+        
+        print(f"Generated {len(result)} relevant hashtags: {result[:5]}...")
+        return result
+        
+    except Exception as e:
+        print(f"Error generating hashtags: {e}")
+        return get_default_hashtags(platform)
+
+def get_default_hashtags(platform):
+    """Return default hashtags when generation fails"""
+    defaults = ['#instagood', '#photooftheday', '#beautiful', '#love', '#happy', 
+                '#fashion', '#style', '#life', '#motivation', '#inspiration',
+                '#viral', '#trending', '#lifestyle', '#fun', '#amazing']
+    
+    if platform.lower() == 'instagram':
+        defaults = ['#instagram', '#instagood', '#instadaily'] + defaults
+    elif platform.lower() == 'facebook':
+        defaults = ['#facebook', '#socialmedia', '#community'] + defaults
+    elif platform.lower() == 'twitter':
+        defaults = ['#twitter', '#tweet', '#trending'] + defaults
+    
+    return defaults[:15]
 
 def get_feature_importance(text_seq, num_data):
     """Calculate feature importance using model gradients"""
@@ -399,7 +754,7 @@ def predict():
         predictions = make_prediction(text_seq, num_data)
         
         # Generate hashtag suggestions
-        hashtags = generate_hashtag_suggestions(caption, content)
+        hashtags = generate_hashtag_suggestions(caption, content, platform)
         
         # Get feature importance
         feature_importance = get_feature_importance(text_seq, num_data)
@@ -459,9 +814,12 @@ def get_history():
         
         # Get last 50 predictions
         predictions = list(predictions_collection.find(
-            {},
-            {'_id': 0}
+            {}
         ).sort('created_at', -1).limit(50))
+        
+        # Convert ObjectId to string for each prediction
+        for pred in predictions:
+            pred['_id'] = str(pred['_id'])
         
         return jsonify({
             'success': True,
@@ -469,6 +827,30 @@ def get_history():
         })
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/history/<prediction_id>', methods=['DELETE'])
+def delete_prediction(prediction_id):
+    """Delete a specific prediction from history"""
+    try:
+        if not mongo_client:
+            return jsonify({'error': 'Database not connected'}), 500
+        
+        from bson.objectid import ObjectId
+        
+        # Delete the prediction
+        result = predictions_collection.delete_one({'_id': ObjectId(prediction_id)})
+        
+        if result.deleted_count > 0:
+            return jsonify({
+                'success': True,
+                'message': 'Prediction deleted successfully'
+            })
+        else:
+            return jsonify({'error': 'Prediction not found'}), 404
+        
+    except Exception as e:
+        print(f"Error deleting prediction: {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
