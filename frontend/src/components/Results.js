@@ -144,7 +144,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
 
       {/* Prediction History */}
       <div className="history-section">
-        <h2>📜 Prediction History</h2>
+        <h2> Prediction History</h2>
         
         {loadingHistory ? (
           <div className="loading-history">
