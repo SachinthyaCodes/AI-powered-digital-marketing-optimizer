@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 import Header from './components/Header';
+import CampaignAboutUs from './components/CampaignAboutUs';
 import CampaignForm from './components/CampaignForm';
 import Results from './components/Results';
 import Footer from './components/Footer';
@@ -9,6 +10,8 @@ import Footer from './components/Footer';
 const API_BASE_URL = 'http://localhost:5000/api';
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('about');
+  
   const [formData, setFormData] = useState({
     caption: '',
     content: '',
@@ -158,30 +161,40 @@ function App() {
     setError(null);
   };
 
+  const handleNavigateToCampaign = () => {
+    setCurrentPage('campaign');
+  };
+
   return (
     <div className="App">
       <Header />
 
       <div className="container">
-        <CampaignForm
-          formData={formData}
-          imageFile={imageFile}
-          imagePreview={imagePreview}
-          extracting={extracting}
-          loading={loading}
-          error={error}
-          onInputChange={handleInputChange}
-          onImageUpload={handleImageUpload}
-          onSubmit={handleSubmit}
-          onReset={resetForm}
-        />
+        {currentPage === 'about' ? (
+          <CampaignAboutUs onNavigate={handleNavigateToCampaign} />
+        ) : (
+          <>
+            <CampaignForm
+              formData={formData}
+              imageFile={imageFile}
+              imagePreview={imagePreview}
+              extracting={extracting}
+              loading={loading}
+              error={error}
+              onInputChange={handleInputChange}
+              onImageUpload={handleImageUpload}
+              onSubmit={handleSubmit}
+              onReset={resetForm}
+            />
 
-        <Results 
-          results={results} 
-          predictionHistory={predictionHistory}
-          loadingHistory={loadingHistory}
-          onDelete={deletePrediction}
-        />
+            <Results 
+              results={results} 
+              predictionHistory={predictionHistory}
+              loadingHistory={loadingHistory}
+              onDelete={deletePrediction}
+            />
+          </>
+        )}
       </div>
 
       <Footer />
