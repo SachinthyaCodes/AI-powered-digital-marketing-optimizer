@@ -131,10 +131,12 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   width: 100%;
   margin-bottom: 40px;
   animation: slideIn 0.5s ease;
+  max-height: 85vh;
 }
 
 @keyframes slideIn {
@@ -159,7 +161,6 @@
 }
 
 .results-section.current-results:hover {
-  transform: translateY(-4px);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.25);
 }
 
