@@ -27,15 +27,32 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
         <div className="results-section current-results">
           <h2>📊 Latest Prediction Results</h2>
           
-          <PredictionsGrid predictions={results.predictions} />
+          <div className="result-card fade-in">
+            <PredictionsGrid predictions={results.predictions} />
+          </div>
           
-          <Recommendations recommendations={results.recommendations} />
+          <div className="result-card fade-in delay-1">
+            <div className="ai-recommendations-highlight">
+              <div className="ai-badge">
+                <span className="ai-icon">🤖</span>
+                <span className="ai-text">AI-Powered</span>
+              </div>
+              <h3 className="recommendations-title">Smart Recommendations</h3>
+            </div>
+            <Recommendations recommendations={results.recommendations} />
+          </div>
           
-          <HashtagSuggestions hashtags={results.hashtag_suggestions} />
+          <div className="result-card fade-in delay-2">
+            <HashtagSuggestions hashtags={results.hashtag_suggestions} />
+          </div>
           
-          <TimingAnalysis timingAnalysis={results.timing_analysis} />
+          <div className="result-card fade-in delay-3">
+            <TimingAnalysis timingAnalysis={results.timing_analysis} />
+          </div>
           
-          <FeatureImportance featureImportance={results.feature_importance} />
+          <div className="result-card fade-in delay-4">
+            <FeatureImportance featureImportance={results.feature_importance} />
+          </div>
         </div>
       )}
 
