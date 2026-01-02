@@ -25,7 +25,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
       {/* Current Prediction Results */}
       {results && (
         <div className="results-section current-results">
-          <h2>📊 Latest Prediction Results</h2>
+          <h2>Latest Prediction Results</h2>
           
           <div className="result-card fade-in">
             <PredictionsGrid predictions={results.predictions} />
@@ -33,10 +33,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
           
           <div className="result-card fade-in delay-1">
             <div className="ai-recommendations-highlight">
-              <div className="ai-badge">
-                <span className="ai-icon">🤖</span>
-                <span className="ai-text">AI-Powered</span>
-              </div>
+              
               <h3 className="recommendations-title">Smart Recommendations</h3>
             </div>
             <Recommendations recommendations={results.recommendations} />
@@ -61,7 +58,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
         <div className="modal-overlay" onClick={() => setViewingPrediction(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>📊 Prediction Details</h2>
+              <h2> Prediction Details</h2>
               <button className="close-modal" onClick={() => setViewingPrediction(null)}>×</button>
             </div>
             
@@ -104,7 +101,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* Predictions */}
               {viewingPrediction.predictions && (
                 <div className="detail-section">
-                  <h3>📈 Predictions</h3>
+                  <h3> Predictions</h3>
                   <PredictionsGrid predictions={viewingPrediction.predictions} />
                 </div>
               )}
@@ -112,7 +109,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* AI-Powered Recommendations */}
               {viewingPrediction.recommendations && (
                 <div className="detail-section">
-                  <h3>💡 AI-Powered Recommendations</h3>
+                  <h3> AI-Powered Recommendations</h3>
                   <Recommendations recommendations={viewingPrediction.recommendations} />
                 </div>
               )}
@@ -120,7 +117,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* Hashtag Suggestions */}
               {viewingPrediction.hashtag_suggestions && (
                 <div className="detail-section">
-                  <h3>🏷️ Hashtag Suggestions</h3>
+                  <h3> Hashtag Suggestions</h3>
                   <HashtagSuggestions hashtags={viewingPrediction.hashtag_suggestions} />
                 </div>
               )}
@@ -128,7 +125,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* Optimal Posting Times Analysis */}
               {viewingPrediction.timing_analysis && (
                 <div className="detail-section">
-                  <h3>⏰ Optimal Posting Times Analysis</h3>
+                  <h3>Optimal Posting Times Analysis</h3>
                   <TimingAnalysis timingAnalysis={viewingPrediction.timing_analysis} />
                 </div>
               )}
