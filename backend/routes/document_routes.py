@@ -40,7 +40,7 @@ def upload_document():
 @document_bp.route('/', methods=['GET'])
 @admin_required
 def get_documents():
-    """Get all documents for admin's service"""
+    """Get all documents for admin's service with pagination"""
     db = SessionLocal()
     try:
         user_id = request.current_user['user_id']
@@ -50,11 +50,34 @@ def get_documents():
             return jsonify({'error': 'Admin access required'}), 403
         
         service_id = user.service_id
-        documents = db.query(Document).filter(Document.service_id == service_id).all()
+        
+        # Get pagination parameters
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        offset = (page - 1) * limit
+        
+        # Get total count
+        total_count = db.query(Document).filter(Document.service_id == service_id).count()
+        
+        # Get paginated documents
+        documents = db.query(Document).filter(
+            Document.service_id == service_id
+        ).order_by(
+            Document.created_at.desc()
+        ).offset(offset).limit(limit).all()
+        
+        # Calculate pagination info
+        total_pages = (total_count + limit - 1) // limit  # Ceiling division
         
         return jsonify({
             'documents': [doc.to_dict() for doc in documents],
-            'total': len(documents)
+            'total': total_count,
+            'pagination': {
+                'page': page,
+                'pages': total_pages,
+                'limit': limit,
+                'total': total_count
+            }
         }), 200
     except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500
@@ -87,6 +110,37 @@ def delete_document(document_id):
         return jsonify({'message': 'Document deleted successfully'}), 200
     except Exception as e:
         db.rollback()
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+    finally:
+        db.close()
+
+@document_bp.route('/stats', methods=['GET'])
+@admin_required
+def get_document_stats():
+    """Get document statistics for admin's service"""
+    db = SessionLocal()
+    try:
+        user_id = request.current_user['user_id']
+        user = db.query(User).filter(User.id == user_id).first()
+        
+        if not user or user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        service_id = user.service_id
+        
+        # Count documents
+        total_docs = db.query(Document).filter(Document.service_id == service_id).count()
+        processed_docs = db.query(Document).filter(
+            Document.service_id == service_id,
+            Document.is_processed == True
+        ).count()
+        
+        return jsonify({
+            'total_documents': total_docs,
+            'processed_documents': processed_docs,
+            'pending_documents': total_docs - processed_docs
+        }), 200
+    except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500
     finally:
         db.close()

@@ -69,3 +69,8 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Large model files
+backend/models/*.gguf
+backend/data/chromadb/
+backend/data/rag_indices/

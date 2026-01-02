@@ -14,17 +14,20 @@ psycopg2-binary==2.9.10
 supabase==2.3.4
 postgrest==0.13.0
 
-# pgvector for embeddings
-pgvector==0.2.4
-
 # Document Processing
 pypdf==3.17.4
 openpyxl==3.1.2
 python-docx==1.1.0
 pandas>=2.2.0
 
-# LLM - Ollama (local)
+# Ollama (Local LLM)
 requests==2.31.0
 
 # Language Detection
 langdetect==1.0.9
+
+# RAG System - Ollama (English Only)
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4
+requests>=2.31.0
+numpy>=1.24.0

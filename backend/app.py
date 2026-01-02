@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 # Configure CORS with comprehensive settings
 CORS(app, resources={
-    r"/api/*": {
+    r"/*": {
         "origins": ["http://localhost:3000", "http://localhost:5173"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
@@ -67,8 +67,11 @@ def handle_exception(e):
 
 @app.before_request
 def before_request():
-    """Initialize database connection before first request - SQLAlchemy handles this"""
-    pass
+    """Handle CORS preflight requests and database initialization"""
+    from flask import request
+    # Allow all OPTIONS requests without authentication
+    if request.method == 'OPTIONS':
+        return '', 200
 
 @app.teardown_appcontext
 def teardown_db(exception=None):
@@ -76,16 +79,21 @@ def teardown_db(exception=None):
     pass  # SQLAlchemy session cleanup handled by SessionLocal
 
 if __name__ == '__main__':
-    print("Starting MarketMatic Backend Server...")
+    import os
+    # Suppress llama.cpp verbose output
+    os.environ['LLAMA_CPP_LOG_LEVEL'] = '2'
+    
+    print("\n" + "="*60)
+    print("[MarketMatic] Backend Server")
+    print("="*60)
     
     # Display database info
     if Config.USE_SQLITE:
-        print("Database: SQLite (Local Development)")
-    elif Config.DATABASE_URL:
-        # Extract database name from URL for display
-        db_info = Config.DATABASE_URL.split('@')[-1] if '@' in Config.DATABASE_URL else 'PostgreSQL'
-        print(f"Database: Supabase PostgreSQL ({db_info})")
+        print("[DB] Database: SQLite (Local)")
     else:
-        print("Database: None (Configuration Error!)")
+        print("[DB] Database: Supabase PostgreSQL")
+    
+    print("[Server] http://localhost:5000")
+    print("="*60 + "\n")
     
     app.run(debug=True, host='0.0.0.0', port=5000)

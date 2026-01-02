@@ -10,13 +10,14 @@ class DocumentProcessor:
     """Service for processing various document types and extracting text"""
     
     @staticmethod
-    def chunk_text(text, chunk_size=500, chunk_overlap=50):
+    def chunk_text(text, chunk_size=600, chunk_overlap=100):
         """
         Split text into overlapping chunks for better context preservation
+        OPTIMIZED for multi-business RAG system
         
         Args:
             text: The text to chunk
-            chunk_size: Maximum characters per chunk
+            chunk_size: Maximum characters per chunk (increased for better context)
             chunk_overlap: Number of characters to overlap between chunks
         
         Returns:
@@ -25,35 +26,53 @@ class DocumentProcessor:
         if not text or len(text) == 0:
             return []
         
-        # Clean the text
+        # Clean the text - preserve structure
         text = re.sub(r'\s+', ' ', text).strip()
+        
+        # If text is very short, return as single chunk
+        if len(text) <= chunk_size:
+            return [text] if text else []
         
         chunks = []
         start = 0
         
         while start < len(text):
-            # Get chunk
-            end = start + chunk_size
+            # Calculate end position
+            end = min(start + chunk_size, len(text))
             
-            # If not the last chunk, try to break at sentence boundary
+            # If not the last chunk, try to break at natural boundaries
             if end < len(text):
-                # Look for sentence endings near the chunk boundary
-                for i in range(end, max(start + chunk_size - 100, start), -1):
-                    if text[i] in '.!?\n':
-                        end = i + 1
+                # Look for sentence endings (., !, ?, \n) near the chunk boundary
+                best_break = -1
+                search_start = max(start + chunk_size - 150, start + chunk_size // 2)
+                
+                for i in range(end, search_start, -1):
+                    if i < len(text) and text[i] in '.!?\n':
+                        best_break = i + 1
                         break
+                
+                # If found a good break point, use it
+                if best_break > 0:
+                    end = best_break
+                # Otherwise, try to break at word boundary
+                elif end < len(text):
+                    for i in range(end, max(start + chunk_size - 50, start), -1):
+                        if i < len(text) and text[i].isspace():
+                            end = i
+                            break
             
             chunk = text[start:end].strip()
-            if chunk:
+            if chunk and len(chunk) > 20:  # Only add chunks with meaningful content
                 chunks.append(chunk)
             
-            # Move start position with overlap
+            # Move start position with overlap to maintain context
             start = end - chunk_overlap
             
-            # Prevent infinite loop
-            if start <= chunks.__len__() * (chunk_size - chunk_overlap) - chunk_size:
+            # Safety check to prevent infinite loop
+            if start >= len(text) or (len(chunks) > 0 and start <= chunks.__len__() * (chunk_size - chunk_overlap) - chunk_size):
                 break
         
+        print(f"[CHUNKING] Created {len(chunks)} chunks from {len(text)} chars (avg: {len(text)//max(len(chunks),1)} chars/chunk)")
         return chunks
     
     @staticmethod

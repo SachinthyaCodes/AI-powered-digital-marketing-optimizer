@@ -64,13 +64,16 @@ def update_bot_config():
         if not service:
             return jsonify({'message': 'Service not found'}), 404
         
-        # Update configuration
+        # Update configuration with proper JSON serialization
         if 'welcome_message' in data:
-            service.welcome_message = data['welcome_message']
+            # Convert dict to JSON string for Text column
+            service.welcome_message = json.dumps(data['welcome_message']) if isinstance(data['welcome_message'], dict) else data['welcome_message']
         if 'fallback_message' in data:
-            service.fallback_message = data['fallback_message']
+            # Convert dict to JSON string for Text column
+            service.fallback_message = json.dumps(data['fallback_message']) if isinstance(data['fallback_message'], dict) else data['fallback_message']
         if 'language_support' in data:
-            service.language_support = data['language_support']
+            # Convert array to comma-separated string
+            service.language_support = ','.join(data['language_support']) if isinstance(data['language_support'], list) else data['language_support']
         if 'rag_enabled' in data:
             service.rag_enabled = data['rag_enabled']
         if 'nlp_enabled' in data:
@@ -80,9 +83,21 @@ def update_bot_config():
         if 'response_mode' in data:
             service.response_mode = data['response_mode']
         if 'documents_only_message' in data:
-            service.documents_only_message = data['documents_only_message']
+            # Convert dict to JSON string for Text column
+            service.documents_only_message = json.dumps(data['documents_only_message']) if isinstance(data['documents_only_message'], dict) else data['documents_only_message']
         if 'use_general_knowledge' in data:
             service.use_general_knowledge = data['use_general_knowledge']
+        
+        # Response configuration
+        if 'max_response_tokens' in data:
+            tokens = int(data['max_response_tokens'])
+            service.max_response_tokens = max(100, min(1000, tokens))  # Clamp between 100-1000
+        if 'response_temperature' in data:
+            temp = float(data['response_temperature'])
+            service.response_temperature = max(0.0, min(1.0, temp))  # Clamp between 0.0-1.0
+        if 'response_timeout' in data:
+            timeout = int(data['response_timeout'])
+            service.response_timeout = max(10, min(120, timeout))  # Clamp between 10-120 seconds
         
         service.updated_at = datetime.utcnow()
         db.commit()
@@ -313,6 +328,9 @@ def create_product():
                 except:
                     image_urls = [data['images']] if data['images'] else []
         
+        # Product model has image_url (singular), take first image if multiple
+        image_url = image_urls[0] if image_urls else None
+        
         new_product = Product(
             id=str(uuid.uuid4()),
             service_id=service_id,
@@ -321,7 +339,7 @@ def create_product():
             price=float(data['price']),
             stock=int(data['stock']),
             category=data.get('category', 'general'),
-            images=image_urls,
+            image_url=image_url,  # Fixed: use image_url not images
             is_active=data.get('is_active', True)
         )
         

@@ -88,14 +88,14 @@ def init_db():
             with engine.connect() as conn:
                 conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
                 conn.commit()
-            print("✅ pgvector extension enabled")
+            print("[OK] pgvector extension enabled")
         
         # Create all tables
         Base.metadata.create_all(bind=engine)
-        print("✅ Database initialized - all tables created")
+        print("[OK] Database initialized - all tables created")
         return True
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
+        print(f"[ERROR] Database initialization failed: {e}")
         return False
 
 def drop_all_tables():
@@ -104,10 +104,10 @@ def drop_all_tables():
     """
     try:
         Base.metadata.drop_all(bind=engine)
-        print("✅ All tables dropped")
+        print("[OK] All tables dropped")
         return True
     except Exception as e:
-        print(f"❌ Failed to drop tables: {e}")
+        print(f"[ERROR] Failed to drop tables: {e}")
         return False
 
 def reset_database():
@@ -116,7 +116,7 @@ def reset_database():
     """
     if drop_all_tables():
         if init_db():
-            print("✅ Database reset complete")
+            print("[OK] Database reset complete")
             return True
     return False
 
@@ -125,7 +125,7 @@ def test_connection():
     try:
         with engine.connect() as conn:
             result = conn.execute(text("SELECT 1"))
-            print("✅ Supabase PostgreSQL connection successful")
+            print("[OK] Supabase PostgreSQL connection successful")
             return True
     except Exception as e:
         print(f"❌ Supabase connection failed: {e}")

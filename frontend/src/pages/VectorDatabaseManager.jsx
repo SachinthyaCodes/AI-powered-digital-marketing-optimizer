@@ -29,7 +29,7 @@ const VectorDatabaseManager = () => {
   const fetchVectorStatus = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/chat/vector-status');
+      const response = await api.get('/api/rag/status');
       const data = response.data;
       
       setVectorStatus(data);
@@ -46,36 +46,26 @@ const VectorDatabaseManager = () => {
   const syncVectorDatabase = async () => {
     try {
       setLoading(true);
-      const response = await api.post('/chat/sync-vectors');
-      
-      if (response.data.results.success) {
-        alert(`Vector database synchronized successfully! 
-Synced: ${response.data.results.faqs} FAQs, ${response.data.results.products} products, ${response.data.results.policies} policies
-Total chunks: ${response.data.results.total_chunks}`);
-        
-        // Refresh status
-        await fetchVectorStatus();
-      } else {
-        alert('Synchronization failed: ' + JSON.stringify(response.data.results));
-      }
+      alert('RAG documents are automatically embedded when uploaded. Check the Documents page to upload new files.');
+      await fetchVectorStatus();
     } catch (error) {
-      console.error('Error syncing vectors:', error);
-      alert('Error syncing vector database: ' + (error.response?.data?.error || error.message));
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const clearVectorDatabase = async () => {
-    if (!confirm('Are you sure you want to clear all vector data? This will remove the chatbot\'s semantic search capabilities until you sync again.')) {
+    if (!confirm('Are you sure you want to clear all vector embeddings? This will remove the RAG capabilities until you upload documents again.')) {
       return;
     }
 
     try {
       setLoading(true);
-      const response = await api.post('/chat/clear-vectors');
+      // Delete all document embeddings
+      const response = await api.delete('/api/rag/documents/all');
       
-      alert('Vector database cleared successfully. Please sync your data again to restore chatbot capabilities.');
+      alert('Vector database cleared successfully. Upload documents again to restore RAG capabilities.');
       await fetchVectorStatus();
     } catch (error) {
       console.error('Error clearing vectors:', error);

@@ -57,7 +57,7 @@ export default function BusinessChatDemo() {
   const showWelcomeMessage = () => {
     const welcomeMsg = {
       id: 'welcome',
-      text: 'Hello! 👋 I\'m your AI business assistant. I can help you with:\n\n• Product information and recommendations\n• Frequently asked questions\n• Business policies and procedures\n• Services and pricing\n\nFeel free to ask me anything in English or Sinhala! සිංහලෙන් ද විමසන්න පුළුවන්!',
+      text: 'Hello! 👋 Welcome to our AI business assistant!\n\nI\'m here to help you with:\n\n✓ Product details and recommendations\n✓ Pricing and plan information\n✓ Common questions (FAQs)\n✓ Business policies and terms\n\nYou can ask me in English, Sinhala, or even mix both languages!\nසිංහලෙන් හෝ ඉංග්‍රීසියෙන් ඇසීමට නිදහස් වන්න! 😊\n\nHow can I assist you today?',
       sender: 'bot',
       timestamp: new Date()
     };

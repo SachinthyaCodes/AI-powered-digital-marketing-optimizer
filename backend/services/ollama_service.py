@@ -38,6 +38,14 @@ class OllamaService:
             print(f"⚠️  Ollama connection failed: {e}")
             print("   Make sure Ollama is running: ollama serve")
 
+    def test_connection(self):
+        """Test if Ollama is available"""
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=2)
+            return response.status_code == 200
+        except:
+            return False
+
     def generate_embedding(self, text):
         """
         Generate embedding using Ollama's nomic-embed-text model

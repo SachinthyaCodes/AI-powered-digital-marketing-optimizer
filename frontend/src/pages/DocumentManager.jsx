@@ -16,8 +16,9 @@ const DocumentManager = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
-  const [stats, setStats] = useState([]);
+  const [stats, setStats] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadData, setUploadData] = useState({
     files: [],
     document_type: 'general'
@@ -68,9 +69,10 @@ const DocumentManager = () => {
   const fetchStats = async () => {
     try {
       const response = await api.get('/api/documents/stats');
-      setStats(response.data.statistics);
+      setStats(response.data || {});
     } catch (error) {
       console.error('Error fetching stats:', error);
+      setStats({ total_documents: 0, processed_documents: 0, pending_documents: 0 });
     }
   };
 
@@ -83,28 +85,93 @@ const DocumentManager = () => {
     }
 
     setUploadLoading(true);
+    setUploadProgress({ current: 0, total: uploadData.files.length, messages: [] });
     
     try {
-      const uploadPromises = uploadData.files.map(file => {
+      const results = [];
+      
+      for (let i = 0; i < uploadData.files.length; i++) {
+        const file = uploadData.files[i];
         const formData = new FormData();
         formData.append('file', file);
         formData.append('document_type', uploadData.document_type);
-        return api.post('/api/documents/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      });
-
-      await Promise.all(uploadPromises);
+        
+        // Update progress
+        setUploadProgress(prev => ({
+          ...prev,
+          current: i + 1,
+          messages: [...prev.messages, `📤 Uploading ${file.name}...`]
+        }));
+        
+        try {
+          const response = await api.post('/api/documents/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          
+          const docData = response.data;
+          
+          // Add success message with details
+          setUploadProgress(prev => ({
+            ...prev,
+            messages: [
+              ...prev.messages,
+              `✅ ${file.name} uploaded successfully!`,
+              `   📝 Created ${docData.chunk_count || 0} text chunks`,
+              `   🧠 Generated ${docData.embedding_count || 0} embeddings`,
+              `   ✓ Ready for chatbot queries\n`
+            ]
+          }));
+          
+          results.push({ success: true, file: file.name });
+        } catch (error) {
+          // Add error message
+          setUploadProgress(prev => ({
+            ...prev,
+            messages: [
+              ...prev.messages,
+              `❌ Failed to upload ${file.name}: ${error.response?.data?.error || error.message}\n`
+            ]
+          }));
+          
+          results.push({ success: false, file: file.name, error: error.message });
+        }
+        
+        // Small delay to show progress
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
       
-      setShowUploadModal(false);
-      setUploadData({ files: [], document_type: 'general' });
-      fetchDocuments();
-      fetchStats();
+      // Refresh data
+      await fetchDocuments();
+      await fetchStats();
       
-      alert('Documents uploaded successfully!');
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      setUploadProgress(prev => ({
+        ...prev,
+        messages: [
+          ...prev.messages,
+          `\n🎉 Upload Complete!`,
+          `   ✅ ${successCount} file(s) processed successfully`,
+          failCount > 0 ? `   ❌ ${failCount} file(s) failed` : ''
+        ].filter(Boolean)
+      }));
+      
+      // Auto-close after 3 seconds if all successful
+      if (failCount === 0) {
+        setTimeout(() => {
+          setShowUploadModal(false);
+          setUploadData({ files: [], document_type: 'general' });
+          setUploadProgress(null);
+        }, 3000);
+      }
+      
     } catch (error) {
       console.error('Error uploading documents:', error);
-      alert('Error uploading documents: ' + (error.response?.data?.error || 'Unknown error'));
+      setUploadProgress(prev => ({
+        ...prev,
+        messages: [...prev.messages, `❌ Upload failed: ${error.message}`]
+      }));
     } finally {
       setUploadLoading(false);
     }
@@ -159,6 +226,9 @@ const DocumentManager = () => {
   );
 
   const getStatusBadge = (status) => {
+    // Default to 'processing' if status is undefined/null
+    const statusValue = status || 'processing';
+    
     const colors = {
       processing: 'bg-yellow-100 text-yellow-700',
       completed: 'bg-green-100 text-green-700',
@@ -171,12 +241,12 @@ const DocumentManager = () => {
       failed: XCircle
     };
 
-    const Icon = icons[status] || Clock;
+    const Icon = icons[statusValue] || Clock;
 
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${colors[statusValue] || 'bg-gray-100 text-gray-700'}`}>
         <Icon className="w-3 h-3" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {statusValue.charAt(0).toUpperCase() + statusValue.slice(1)}
       </span>
     );
   };
@@ -211,24 +281,36 @@ const DocumentManager = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {stats.map((stat, index) => {
-            const config = documentTypes[stat._id] || documentTypes.general;
-            const Icon = config.icon;
-            
-            return (
-              <div key={index} className="bg-white rounded-lg p-4 shadow-sm border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">{config.label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.count}</p>
-                    <p className="text-xs text-gray-500">{stat.total_chunks} chunks</p>
-                  </div>
-                  <Icon className={`w-8 h-8 text-${config.color}-500`} />
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Documents</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.total_documents || 0}</p>
               </div>
-            );
-          })}
+              <FileText className="w-8 h-8 text-blue-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Processed</p>
+                <p className="text-2xl font-bold text-green-600">{stats?.processed_documents || 0}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats?.pending_documents || 0}</p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-500" />
+            </div>
+          </div>
         </div>
 
         {/* Actions Bar */}
@@ -412,7 +494,7 @@ const DocumentManager = () => {
           </div>
 
           {/* Pagination */}
-          {pagination.pages > 1 && (
+          {pagination && pagination.pages > 1 && (
             <div className="px-6 py-3 bg-gray-50 border-t flex items-center justify-between">
               <div className="text-sm text-gray-700">
                 Showing page {pagination.page} of {pagination.pages} ({pagination.total} total)
@@ -491,6 +573,46 @@ const DocumentManager = () => {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* Upload Progress Display */}
+                {uploadProgress && (
+                  <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-900">
+                          Processing {uploadProgress.current} of {uploadProgress.total} files
+                        </span>
+                        <span className="text-sm text-blue-700">
+                          {Math.round((uploadProgress.current / uploadProgress.total) * 100)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="max-h-60 overflow-y-auto bg-white rounded p-3 border border-blue-200">
+                      <div className="font-mono text-xs space-y-1">
+                        {uploadProgress.messages.map((msg, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`${
+                              msg.includes('✅') ? 'text-green-600' : 
+                              msg.includes('❌') ? 'text-red-600' : 
+                              msg.includes('🎉') ? 'text-blue-700 font-bold' :
+                              'text-gray-700'
+                            }`}
+                          >
+                            {msg}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 

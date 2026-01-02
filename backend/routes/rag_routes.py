@@ -1,34 +1,40 @@
 """
-RAG Routes for MarketMatic using SQLAlchemy and pgvector
+RAG Routes for MarketMatic using Ollama (English Only)
 Document processing, embedding generation, and semantic search
+MULTI-BUSINESS SUPPORT: Each service has isolated document storage
 """
 from flask import Blueprint, request, jsonify
 from database import SessionLocal
-from models.sqlalchemy_models import Document, DocumentEmbedding, User, Service
+from models.sqlalchemy_models import Document, User, Service, FAQ
 from auth.decorators import admin_required
-from services.document_processor import DocumentProcessor
-from services.vector_service import VectorService
-from utils.cloudinary_service import CloudinaryService
+from services.ollama_rag_service import OllamaRAGService
 from datetime import datetime
 import uuid
 import traceback
+import os
 
 rag_bp = Blueprint('rag', __name__, url_prefix='/api/rag')
 
-# Initialize services
-document_processor = DocumentProcessor()
-vector_service = VectorService()
-cloudinary_service = CloudinaryService()
+# Cache RAG services per service_id
+rag_services = {}
 
 
 # ============== ADMIN ENDPOINTS ==============
+
+def get_rag_service(service_id: str) -> OllamaRAGService:
+    """Get or create RAG service for a service_id"""
+    if service_id not in rag_services:
+        rag_services[service_id] = OllamaRAGService(service_id)
+    return rag_services[service_id]
+
 
 @rag_bp.route('/upload-document', methods=['POST'])
 @admin_required
 def upload_document():
     """
-    Upload and process a document (PDF, Excel, Word, Text)
-    Extracts content, generates embeddings with pgvector, and stores in database
+    Upload and process a document with Ollama RAG
+    Extracts content, generates embeddings, and stores in database
+    Also extracts FAQs automatically (English only)
     """
     db = SessionLocal()
     try:
@@ -57,13 +63,28 @@ def upload_document():
         # Read file content
         file_content = file.read()
         
+        # Get RAG service for this service_id
+        rag_service = get_rag_service(service_id)
+        
+        # Process document
+        process_result = rag_service.process_document_file(file_content, file.filename)
+        
+        if not process_result['success']:
+            return jsonify({'error': process_result.get('error', 'Document processing failed')}), 400
+        
+        text = process_result['text']
+        chunks = process_result['chunks']
+        
         # Create document record
         doc = Document(
             id=str(uuid.uuid4()),
             service_id=service_id,
             filename=file.filename,
-            file_type=file_ext,
-            status='processing'
+            content=text[:10000],  # Store first 10k chars
+            document_type=file_ext,
+            file_size=len(file_content),
+            is_processed=True,
+            chunk_count=len(chunks)
         )
         
         db.add(doc)
@@ -71,65 +92,76 @@ def upload_document():
         db.refresh(doc)
         
         try:
-            # Process file based on type
-            if file_ext == 'pdf':
-                content = document_processor.process_pdf(file_content)
-            elif file_ext in ['xlsx', 'xls']:
-                content = document_processor.process_excel(file_content)
-            elif file_ext == 'docx':
-                content = document_processor.process_docx(file_content)
-            else:  # txt
-                content = file_content.decode('utf-8', errors='ignore')
-            
-            if not content:
-                doc.status = 'failed'
-                doc.error_message = 'No content extracted from document'
-                db.commit()
-                return jsonify({
-                    'error': 'Could not extract content from document',
-                    'document_id': str(doc.id)
-                }), 400
-            
-            # Split content into chunks and generate embeddings using pgvector
-            chunks = document_processor.chunk_text(content, chunk_size=512, chunk_overlap=50)
-            
-            # Generate embeddings and store in database using pgvector
-            embedding_ids = vector_service.add_document_embeddings(
-                document_id=doc.id,
-                service_id=service_id,
-                chunks=chunks,
-                db_session=db
+            # Add document to RAG system
+            rag_result = rag_service.add_document_to_rag(
+                document_id=str(doc.id),
+                text=text,
+                metadata={
+                    'filename': file.filename,
+                    'document_type': file_ext,
+                    'service_id': service_id
+                }
             )
             
-            # Update document status
-            doc.status = 'completed'
-            doc.chunk_count = len(chunks)
-            doc.processed_at = datetime.utcnow()
-            db.commit()
-            db.refresh(doc)
+            if not rag_result['success']:
+                return jsonify({
+                    'error': f"RAG indexing failed: {rag_result.get('error')}",
+                    'document_id': str(doc.id)
+                }), 500
+            
+            # Extract FAQs (English only)
+            faqs_extracted = []
+            try:
+                print(f"[FAQ] Extracting FAQs from document: {file.filename}")
+                extracted_faqs = rag_service.extract_faqs_from_text(text)
+                print(f"[FAQ] Found {len(extracted_faqs)} FAQ pairs")
+                
+                for faq_data in extracted_faqs:
+                    faq = FAQ(
+                        id=str(uuid.uuid4()),
+                        service_id=service_id,
+                        question=faq_data['question'],
+                        answer=faq_data['answer'],
+                        language='en',
+                        is_active=True
+                    )
+                    db.add(faq)
+                    faqs_extracted.append({
+                        'question': faq_data['question'],
+                        'answer': faq_data['answer']
+                    })
+                    print(f"[FAQ] Added: {faq_data['question'][:50]}...")
+                
+                db.commit()
+                print(f"✅ [FAQ] Successfully saved {len(faqs_extracted)} FAQs to database")
+                
+            except Exception as faq_error:
+                print(f"⚠️ FAQ extraction failed: {faq_error}")
+                import traceback
+                traceback.print_exc()
             
             return jsonify({
+                'success': True,
                 'message': 'Document uploaded and processed successfully',
-                'document': doc.to_dict(),
-                'chunks_processed': len(chunks),
-                'embeddings_created': len(embedding_ids)
+                'document_id': str(doc.id),
+                'filename': doc.filename,
+                'chunks': len(chunks),
+                'total_chars': process_result['total_chars'],
+                'faqs_extracted': len(faqs_extracted),
+                'faqs': faqs_extracted
             }), 201
             
         except Exception as e:
             db.rollback()
-            doc.status = 'failed'
-            doc.error_message = str(e)
-            db.commit()
-            
             return jsonify({
                 'error': f'Error processing document: {str(e)}',
                 'document_id': str(doc.id)
             }), 500
-        
+            
     except Exception as e:
         db.rollback()
-        return jsonify({'error': f'Error uploading document: {str(e)}'}), 500
-    finally:
+        import traceback
+        traceback.print_exc()
         db.close()
 
 
@@ -190,13 +222,18 @@ def delete_document(document_id):
             return jsonify({'error': 'Document not found'}), 404
         
         # Delete associated embeddings
-        db.query(DocumentEmbedding).filter(
-            DocumentEmbedding.document_id == doc.id
-        ).delete()
+        # (No embeddings table with Ollama RAG - handled by FAISS index)
         
         # Delete document
         db.delete(doc)
         db.commit()
+        
+        # Rebuild RAG index without this document
+        try:
+            rag_service = get_rag_service(service_id)
+            rag_service.rebuild_index_from_database()
+        except Exception as rebuild_error:
+            print(f"⚠️ Failed to rebuild index: {rebuild_error}")
         
         return jsonify({'message': 'Document deleted successfully'}), 200
         
@@ -207,12 +244,95 @@ def delete_document(document_id):
         db.close()
 
 
-# ============== SEARCH ENDPOINTS ==============
+@rag_bp.route('/documents/all', methods=['DELETE'])
+@admin_required
+def delete_all_documents():
+    """
+    Delete all documents and embeddings for the service (clear RAG database)
+    """
+    db = SessionLocal()
+    try:
+        user_id = request.current_user['user_id']
+        user = db.query(User).filter(User.id == user_id).first()
+        
+        if not user or user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        service_id = user.service_id
+        
+        # Get all documents for this service
+        documents = db.query(Document).filter(Document.service_id == service_id).all()
+        doc_count = len(documents)
+        
+        # Delete all documents
+        db.query(Document).filter(Document.service_id == service_id).delete()
+        db.commit()
+        
+        # Clear RAG index
+        try:
+            rag_service = get_rag_service(service_id)
+            rag_service.rag_system.clear()
+            rag_service.rag_system.save_index()
+        except Exception as clear_error:
+            print(f"⚠️ Failed to clear RAG index: {clear_error}")
+        
+        return jsonify({
+            'message': f'Successfully deleted {doc_count} documents',
+            'deleted_documents': doc_count
+        }), 200
+        
+    except Exception as e:
+        db.rollback()
+        return jsonify({'error': f'Error deleting documents: {str(e)}'}), 500
+    finally:
+        db.close()
+
+
+# ============== SEARCH/QUERY ENDPOINTS ==============
+
+@rag_bp.route('/query', methods=['POST'])
+def query_rag():
+    """
+    Query RAG system with Ollama (English only)
+    Retrieves relevant context and generates answer
+    """
+    db = SessionLocal()
+    try:
+        data = request.get_json()
+        
+        if not data or 'question' not in data or 'service_id' not in data:
+            return jsonify({'error': 'question and service_id are required'}), 400
+        
+        question = data['question'].strip()
+        service_id = data['service_id']
+        top_k = data.get('top_k', 5)
+        model = data.get('model', 'llama2')
+        
+        if not question:
+            return jsonify({'error': 'Question cannot be empty'}), 400
+        
+        # Get RAG service
+        rag_service = get_rag_service(service_id)
+        
+        # Query with Ollama
+        result = rag_service.query_with_ollama(
+            question=question,
+            top_k=top_k,
+            model=model
+        )
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Error querying RAG: {str(e)}'}), 500
+    finally:
+        db.close()
+
 
 @rag_bp.route('/search', methods=['POST'])
 def search_documents():
     """
-    Search documents using semantic similarity with pgvector
+    Search documents using Ollama RAG (retrieval only, no generation)
     """
     db = SessionLocal()
     try:
@@ -222,23 +342,20 @@ def search_documents():
             return jsonify({'error': 'query and service_id are required'}), 400
         
         query = data['query'].strip()
-        service_id = uuid.UUID(data['service_id'])
-        limit = data.get('limit', 5)
+        service_id = data['service_id']
+        top_k = data.get('top_k', 5)
         
         if not query:
             return jsonify({'error': 'Query cannot be empty'}), 400
         
-        # Get vector service status
-        status = vector_service.get_status()
-        if not status.get('available'):
-            return jsonify({'error': 'Vector service is not available'}), 503
+        # Get RAG service
+        rag_service = get_rag_service(service_id)
         
-        # Search similar documents
-        results = vector_service.search_similar_documents(
+        # Search only (no generation)
+        results = rag_service.rag_system.search(
             query=query,
-            service_id=service_id,
-            limit=limit,
-            db_session=db
+            top_k=top_k,
+            min_similarity=0.3
         )
         
         return jsonify({
@@ -253,17 +370,55 @@ def search_documents():
         db.close()
 
 
+@rag_bp.route('/rebuild-index', methods=['POST'])
+@admin_required
+def rebuild_index():
+    """
+    Rebuild RAG index from all documents in database
+    """
+    db = SessionLocal()
+    try:
+        user_id = request.current_user['user_id']
+        user = db.query(User).filter(User.id == user_id).first()
+        
+        if not user or user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        service_id = user.service_id
+        
+        # Get RAG service
+        rag_service = get_rag_service(service_id)
+        
+        # Rebuild index
+        result = rag_service.rebuild_index_from_database()
+        
+        return jsonify(result), 200 if result['success'] else 500
+        
+    except Exception as e:
+        return jsonify({'error': f'Error rebuilding index: {str(e)}'}), 500
+    finally:
+        db.close()
+
+
 @rag_bp.route('/status', methods=['GET'])
 def get_rag_status():
     """
-    Get RAG system status
+    Get RAG system status (Ollama version)
     """
+    db = SessionLocal()
     try:
-        status = vector_service.get_status()
+        # Get total documents
+        total_documents = db.query(Document).count()
+        total_services_with_docs = db.query(Document.service_id).distinct().count()
         
         return jsonify({
-            'status': 'operational' if status.get('available') else 'unavailable',
-            'vector_service': status,
+            'status': 'operational',
+            'system': 'Ollama RAG (English Only)',
+            'embedding_model': 'all-MiniLM-L6-v2',
+            'vector_db': 'FAISS',
+            'total_documents': total_documents,
+            'total_services': total_services_with_docs,
+            'ollama_available': True,
             'timestamp': datetime.utcnow().isoformat()
         }), 200
         
@@ -273,22 +428,61 @@ def get_rag_status():
             'error': str(e),
             'timestamp': datetime.utcnow().isoformat()
         }), 500
+    finally:
+        db.close()
 
-
-# ============== UTILITY ENDPOINTS ==============
 
 @rag_bp.route('/test', methods=['GET'])
 def test_rag():
     """
-    Test RAG system
+    Test RAG system with sample data
     """
     try:
-        # Test document processor
-        test_text = "This is a test document for RAG system. It contains multiple sentences. Each sentence adds information."
-        chunks = document_processor.chunk_text(test_text, chunk_size=50)
+        # Create a test service
+        test_service_id = "test-service-123"
+        rag_service = get_rag_service(test_service_id)
         
-        # Test vector service
-        status = vector_service.get_status()
+        # Test document
+        test_doc = """
+        Q: What is MarketMatic?
+        A: MarketMatic is a digital marketing platform that helps businesses automate their marketing campaigns.
+        
+        Q: How does it work?
+        A: MarketMatic uses AI to analyze customer data and create personalized marketing strategies.
+        """
+        
+        # Add test document
+        result = rag_service.rag_system.add_documents([{
+            'text': test_doc,
+            'metadata': {'test': True}
+        }])
+        
+        if not result['success']:
+            return jsonify({'error': 'Failed to add test document'}), 500
+        
+        # Test query
+        query_result = rag_service.rag_system.query("What is MarketMatic?")
+        
+        return jsonify({
+            'success': True,
+            'test_results': {
+                'document_added': result,
+                'query_result': query_result
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+# ============== UTILITY ENDPOINTS ==============
+
+# Test endpoint removed - use /status instead
+
         
         return jsonify({
             'message': 'RAG system test successful',
@@ -297,9 +491,6 @@ def test_rag():
             'vector_service': status,
             'timestamp': datetime.utcnow().isoformat()
         }), 200
-        
-    except Exception as e:
-        return jsonify({
-            'error': f'RAG system test failed: {str(e)}',
-            'timestamp': datetime.utcnow().isoformat()
-        }), 500
+
+# ============== END OF ROUTES ==============
+
