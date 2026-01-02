@@ -19,7 +19,7 @@ const CampaignForm = ({
       <h2>Campaign Details</h2>
       <form onSubmit={onSubmit}>
         <div className="form-group">
-          <label htmlFor="caption">Caption *</label>
+          <label htmlFor="caption">Caption</label>
           <textarea
             id="caption"
             name="caption"
@@ -39,7 +39,7 @@ const CampaignForm = ({
         />
 
         <div className="form-group">
-          <label htmlFor="content">Content (Image Text) *</label>
+          <label htmlFor="content">Content (Image Text)</label>
           <textarea
             id="content"
             name="content"
@@ -53,7 +53,7 @@ const CampaignForm = ({
 
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="platform">Platform *</label>
+            <label htmlFor="platform">Platform</label>
             <select
               id="platform"
               name="platform"
@@ -68,7 +68,7 @@ const CampaignForm = ({
           </div>
 
           <div className="form-group">
-            <label htmlFor="post_date">Post Date *</label>
+            <label htmlFor="post_date">Post Date</label>
             <input
               type="date"
               id="post_date"
@@ -80,7 +80,7 @@ const CampaignForm = ({
           </div>
 
           <div className="form-group">
-            <label htmlFor="post_time">Post Time *</label>
+            <label htmlFor="post_time">Post Time</label>
             <input
               type="time"
               id="post_time"
@@ -94,7 +94,7 @@ const CampaignForm = ({
 
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="followers">Followers *</label>
+            <label htmlFor="followers">Followers</label>
             <input
               type="number"
               id="followers"

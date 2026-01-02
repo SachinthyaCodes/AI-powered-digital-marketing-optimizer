@@ -136,6 +136,10 @@ function App() {
         setResults(response.data);
         // Reload history to show the new prediction
         loadHistory();
+        // Scroll to top smoothly after results are loaded
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
       }
     } catch (err) {
       console.error('Prediction error:', err);
