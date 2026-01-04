@@ -170,8 +170,8 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Header />
+    <div className={`App ${currentPage === 'about' ? 'fullscreen' : ''}`}>
+      {currentPage !== 'about' && <Header />}
 
       <div className="container">
         {currentPage === 'about' ? (
@@ -201,7 +201,7 @@ function App() {
         )}
       </div>
 
-      <Footer />
+      {currentPage !== 'about' && <Footer />}
     </div>
   );
 }

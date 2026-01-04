@@ -262,7 +262,7 @@ def load_models():
         print("Initializing EasyOCR...")
         easyocr_reader = easyocr.Reader(['en'], gpu=False)
         print("EasyOCR initialized successfully")
-        print("Note: Using Gemini API for Sinhala text extraction")
+        
         
     except Exception as e:
         print(f"Error loading models: {e}")
