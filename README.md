@@ -5,7 +5,6 @@ AI-Powered Digital Marketing Optimizer is an intelligent platform that helps Sri
 ##  Features
 
 - **Performance Prediction**: Predict likes, comments, shares, clicks, and quality scores using Transformer deep learning model
-- 
 - **Explainability**: Feature importance analysis using gradient-based methods
 - **Smart Recommendations**: Get actionable suggestions to improve engagement
 - **Hashtag Suggestions**: AI-powered hashtag recommendations based on content
