@@ -25,11 +25,14 @@
 **MarketMatic** is a comprehensive AI chatbot platform designed specifically for Small and Medium Enterprises (SMEs). It enables businesses to create intelligent, customizable chatbots that can:
 
 - 💬 Handle customer queries in **English and Sinhala**
+- 🤖 Powered by **SinLlama** - A specialized bilingual AI model (8.1B parameters)
 - 📚 Learn from uploaded documents (PDFs, DOCX, Excel)
-- 🤖 Provide intelligent responses using **RAG (Retrieval Augmented Generation)**
+- 🧠 Provide intelligent responses using **RAG (Retrieval Augmented Generation)**
 - 🎨 Customize bot appearance and behavior
 - 📊 Manage FAQs, products, and policies
 - 🔒 Secure multi-user authentication system
+
+> **⚠️ Note:** SinLlama model is currently under active development and optimization to improve response quality, speed, and accuracy for better user experience.
 
 ### Who is it for?
 
@@ -42,10 +45,12 @@
 ## ✨ Features
 
 ### 🤖 Intelligent Chatbot
-- **AI-Powered Responses** using Ollama with Llama3 model
+- **AI-Powered Responses** using **SinLlama** - specialized bilingual model (8.1B parameters, Q4_K quantization)
+- **Native Sinhala Support** - Unlike standard models, SinLlama is trained for Sinhala language
 - **RAG System** for context-aware answers from your documents
 - **Bilingual Support** (English & Sinhala) with automatic language detection
 - **Customizable Personality** - Set tone, greeting messages, and fallback responses
+- **🔬 Under Active Development** - Continuous improvements for better accuracy and speed
 
 ### 📄 Document Processing
 - Upload and process multiple file formats:
@@ -76,6 +81,58 @@
 
 ---
 
+## 🤖 About SinLlama Model
+
+**SinLlama** is a specialized bilingual AI model designed specifically for English and Sinhala language support, making it ideal for Sri Lankan businesses.
+
+### Key Specifications
+
+| Feature | Details |
+|---------|---------|
+| **Base Model** | Llama 3.1 8B |
+| **Total Parameters** | 8.1 Billion |
+| **Quantization** | Q4_K Medium (4-bit) |
+| **File Size** | 4.63 GB |
+| **Languages** | English, Sinhala, Code-mixed |
+| **Context Window** | 4096 tokens |
+| **Deployment** | CPU-optimized (10 threads) |
+
+### Current Performance Metrics
+
+| Metric | Performance |
+|--------|-------------|
+| **Overall Accuracy** | 85% |
+| **Pricing Information** | 95% |
+| **Product Listing** | 90% |
+| **Language Detection** | 90% |
+| **Response Time** | 15.5s average |
+| **Generation Speed** | 0.72 words/second |
+
+### 🚧 Development Status
+
+SinLlama is **actively under development** with the following improvement areas:
+
+- ✅ **Completed:** Basic bilingual support (English + Sinhala)
+- ✅ **Completed:** RAG integration with document processing
+- ✅ **Completed:** Context-aware response generation
+- 🔄 **In Progress:** Response speed optimization
+- 🔄 **In Progress:** Accuracy improvements for complex queries
+- 🔄 **In Progress:** Enhanced Sinhala language understanding
+- 📋 **Planned:** GPU acceleration support
+- 📋 **Planned:** Larger context window (8192 tokens)
+
+### Why SinLlama?
+
+- **🇱🇰 Native Sinhala Support** - Unlike standard models that struggle with Sinhala
+- **💰 Zero Operational Cost** - Runs locally, no API fees
+- **🔒 Complete Privacy** - Data never leaves your server
+- **🎯 Specialized for SMEs** - Optimized for business use cases
+- **🌐 Bilingual by Design** - Seamlessly handles English and Sinhala
+
+> **Research Documentation:** Detailed metrics and evaluation reports are available in [`SINLLAMA_RESEARCH_METRICS.md`](backend/SINLLAMA_RESEARCH_METRICS.md)
+
+---
+
 ## 🏗️ Architecture
 
 ![MarketMatic System Architecture](architecture%20diagram%201.png)
@@ -84,12 +141,15 @@
 
 1. **User Request** → Frontend sends query to backend
 2. **Authentication** → JWT token validated
-3. **RAG Processing**:
+3. **Language Detection** → Automatically detect English or Sinhala
+4. **RAG Processing**:
    - Query embedded using Ollama (nomic-embed-text)
    - Similar documents retrieved from FAISS vector store
-   - Context passed to Llama3 model
-4. **AI Response** → Generated response sent back to frontend
-5. **Display** → Chat interface shows response to user
+   - Context passed to **SinLlama** model for bilingual processing
+5. **AI Response** → SinLlama generates contextual response in appropriate language
+6. **Display** → Chat interface shows response to user
+
+> **Model Performance:** SinLlama achieves 85% overall accuracy with 95% accuracy on pricing queries. Active development ongoing for improvements.
 
 ---
 
@@ -117,12 +177,15 @@
 ### AI & ML
 | Technology | Purpose | Version |
 |------------|---------|---------|
-| **Ollama** | LLM Runtime | Latest |
-| **Llama3** | Chat Model | - |
-| **nomic-embed-text** | Embeddings | - |
+| **SinLlama** | Bilingual Chat Model (Primary) | 8.1B-Q4_K |
+| **Ollama** | LLM Runtime & Embeddings | Latest |
+| **Llama 3.1 8B** | Base Architecture for SinLlama | - |
+| **nomic-embed-text** | Text Embeddings | - |
 | **FAISS** | Vector Search | 1.7.4+ |
 | **Sentence Transformers** | Text Processing | 2.2.0+ |
 | **LangDetect** | Language Detection | 1.0.9 |
+
+> **SinLlama Model Status:** 🚧 **In Development** - Currently achieving 85% accuracy with ongoing optimizations for improved performance.
 
 ### Document Processing
 | Technology | Purpose | Version |
@@ -138,6 +201,7 @@
 | **Supabase** | PostgreSQL Database + Auth |
 | **Cloudinary** | Image Storage & CDN |
 | **Ollama** | Local LLM Server |
+| **SinLlama (GGUF)** | Bilingual AI Model (English + Sinhala) |
 
 ---
 
@@ -223,18 +287,24 @@ npm run dev
 
 Frontend will run on: **http://localhost:5173**
 
-### 4️⃣ Setup Ollama
+### 4️⃣ Setup Ollama & SinLlama
 
 ```bash
 # Install Ollama from https://ollama.ai/
 
 # Pull required models
-ollama pull llama3
-ollama pull nomic-embed-text
+ollama pull nomic-embed-text  # For embeddings
 
-# Verify installation
+# Download SinLlama model (bilingual English-Sinhala)
+# Place sinllama-q4_k_m.gguf in backend/models/ directory
+# Model size: ~4.6 GB
+# Download link: [Contact team for model access]
+
+# Verify Ollama installation
 ollama list
 ```
+
+> **Note:** SinLlama is a specialized model for Sinhala language support. The model is currently being optimized for better performance.
 
 ### 5️⃣ Access the Application
 
@@ -280,8 +350,12 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 # Ollama Configuration
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_CHAT_MODEL=llama3
 OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+
+# SinLlama Model Configuration (Bilingual English-Sinhala)
+SINLLAMA_MODEL_PATH=./models/sinllama-q4_k_m.gguf
+SINLLAMA_CONTEXT_LENGTH=4096
+SINLLAMA_CPU_THREADS=10
 ```
 
 ### Frontend Configuration (.env)
