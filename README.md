@@ -2,7 +2,7 @@
 
 AI-Powered Digital Marketing Optimizer is an intelligent platform that helps Sri Lankan SMEs enhance their marketing performance using AI, ML, and NLP. It provides campaign optimization, sentiment analysis, forecasting, and smart insights through web and mobile applications.
 
-## 🚀 Features
+##  Features
 
 - **Performance Prediction**: Predict likes, comments, shares, clicks, and quality scores using Transformer deep learning model
 - **OCR Text Extraction**: Extract text from images using EasyOCR with Gemini API fallback for Sinhala/English content
@@ -12,14 +12,14 @@ AI-Powered Digital Marketing Optimizer is an intelligent platform that helps Sri
 - **Timing Analysis**: Optimal posting time insights based on historical trends
 - **MongoDB Integration**: Store predictions and access history
 
-## 📋 Prerequisites
+##  Prerequisites
 
 - Python 3.8 or higher
 - Node.js 14 or higher
 - MongoDB Atlas account (or local MongoDB)
 - Git
 
-## 🛠️ Installation
+##  Installation
 
 ### Backend Setup
 
