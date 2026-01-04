@@ -15,12 +15,12 @@ const TimingAnalysis = ({ timingAnalysis }) => {
 
   return (
     <div className="timing-analysis-section">
-      <h3>⏰ Optimal Posting Times Analysis</h3>
+      <h3>Optimal Posting Times Analysis</h3>
       
       {/* Current vs Optimal Performance */}
       {current_metrics && optimal_predictions && (
         <div className="performance-comparison">
-          <h4>📊 Performance: Current vs Optimal Timing</h4>
+          <h4>Performance: Current vs Optimal Timing</h4>
           <div className="metrics-grid">
             <div className="metric-card">
               <div className="metric-header">
@@ -117,7 +117,7 @@ const TimingAnalysis = ({ timingAnalysis }) => {
 
           {improvement_potential && improvement_potential.percentage > 0 && (
             <div className="overall-improvement">
-              <span className="improvement-icon">📈</span>
+              <span className="improvement-icon"></span>
               <span className="improvement-message">
                 With optimal timing, your metrics could improve by <strong>{improvement_potential.percentage}%</strong>
               </span>
@@ -200,7 +200,7 @@ const TimingAnalysis = ({ timingAnalysis }) => {
 
       {/* Key Insights */}
       <div className="timing-insights">
-        <h4>💡 Key Insights & Recommendations</h4>
+        <h4>Key Insights & Recommendations</h4>
         <div className="insights-container">
           {Object.entries(insights).map(([key, value], index) => (
             <div key={index} className="insight-item">

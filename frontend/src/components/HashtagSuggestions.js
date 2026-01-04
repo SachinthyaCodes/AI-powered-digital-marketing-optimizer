@@ -20,7 +20,7 @@ const HashtagSuggestions = ({ hashtags }) => {
   return (
     <div className="hashtags-section">
       <div className="hashtags-header">
-        <h3>🏷️ Suggested Hashtags ({hashtags?.length || 0})</h3>
+        <h3>Suggested Hashtags ({hashtags?.length || 0})</h3>
         {hashtags && hashtags.length > 0 && (
           <button className="copy-all-btn" onClick={copyAllHashtags}>
             {copiedIndex === 'all' ? '✓ Copied!' : '📋 Copy All'}

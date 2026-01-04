@@ -6,7 +6,7 @@ const FeatureImportance = ({ featureImportance }) => {
 
   return (
     <div className="feature-importance-section">
-      <h3>📈 Feature Importance</h3>
+      <h3>Feature Importance</h3>
       <div className="importance-bars">
         {Object.entries(featureImportance).map(([feature, importance], index) => (
           <div key={index} className="importance-item">

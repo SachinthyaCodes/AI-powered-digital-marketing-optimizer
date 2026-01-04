@@ -101,7 +101,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* Predictions */}
               {viewingPrediction.predictions && (
                 <div className="detail-section">
-                  <h3> Predictions</h3>
+                  <h3>Predictions</h3>
                   <PredictionsGrid predictions={viewingPrediction.predictions} />
                 </div>
               )}
@@ -109,7 +109,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* AI-Powered Recommendations */}
               {viewingPrediction.recommendations && (
                 <div className="detail-section">
-                  <h3> AI-Powered Recommendations</h3>
+                  <h3>AI-Powered Recommendations</h3>
                   <Recommendations recommendations={viewingPrediction.recommendations} />
                 </div>
               )}
@@ -117,7 +117,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* Hashtag Suggestions */}
               {viewingPrediction.hashtag_suggestions && (
                 <div className="detail-section">
-                  <h3> Hashtag Suggestions</h3>
+                  <h3>Hashtag Suggestions</h3>
                   <HashtagSuggestions hashtags={viewingPrediction.hashtag_suggestions} />
                 </div>
               )}
@@ -133,7 +133,7 @@ const Results = ({ results, predictionHistory, loadingHistory, onDelete }) => {
               {/* Feature Importance */}
               {viewingPrediction.feature_importance && (
                 <div className="detail-section">
-                  <h3>🎯 Feature Importance</h3>
+                  <h3>Feature Importance</h3>
                   <FeatureImportance featureImportance={viewingPrediction.feature_importance} />
                 </div>
               )}

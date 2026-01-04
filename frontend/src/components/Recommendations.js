@@ -4,7 +4,7 @@ import './Recommendations.css';
 const Recommendations = ({ recommendations }) => {
   return (
     <div className="insights-section">
-      <h3>💡 AI-Powered Recommendations</h3>
+      <h3>AI-Powered Recommendations</h3>
       <p className="recommendations-intro">Based on SHAP analysis and real-world engagement patterns, here's how to boost your campaign performance:</p>
       
       <div className="recommendations-list">
