@@ -68,7 +68,7 @@ cd frontend
 npm install
 ```
 
-## 🎯 Running the Application
+##  Running the Application
 
 ### Start Backend Server
 
@@ -101,7 +101,7 @@ npm start
 
 The frontend will start on `http://localhost:3000` and automatically open in your browser
 
-## 📱 Usage
+##  Usage
 
 1. Open your browser and go to `http://localhost:3000`
 
@@ -121,7 +121,7 @@ The frontend will start on `http://localhost:3000` and automatically open in you
    - Optimal timing insights
    - Feature importance analysis
 
-## 🔧 Configuration
+##  Configuration
 
 ### Backend Configuration (`.env`)
 
@@ -140,7 +140,7 @@ Ensure these files exist in `backend/SavedModels/`:
 - `tokenizer.json` - Text tokenizer (max 30,000 vocabulary)
 - `y_scaler.pkl` - StandardScaler for target variables
 
-## 📊 API Endpoints
+##  API Endpoints
 
 ### Health Check
 ```
@@ -183,7 +183,7 @@ GET /api/history
 Response: { "success": true, "history": [ ... ] }
 ```
 
-## 🧠 Model Architecture
+##  Model Architecture
 
 The application uses a **Transformer-based deep learning model** trained on social media campaign data with:
 - **Multi-head attention mechanism** (4 heads, 128 dimensions)
@@ -202,7 +202,7 @@ The model was trained using:
 - **Batch size**: 64
 - **Validation split**: 80/10/10 train/val/test
 
-## 📈 Features Used for Prediction
+##  Features Used for Prediction
 
 ### Text Features
 - Caption + Content (combined and tokenized)
@@ -223,7 +223,7 @@ The model was trained using:
 4. **Clicks**: Predicted number of clicks
 5. **Quality Score**: Post timing quality score
 
-## 🎨 Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Flask** - Python web framework
@@ -242,7 +242,7 @@ The model was trained using:
 ### Database
 - **MongoDB Atlas** - Cloud-hosted NoSQL database
 
-## 🔍 Explainability Features
+##  Explainability Features
 
 ### 1. Feature Importance
 - Gradient-based importance calculation
@@ -268,7 +268,7 @@ Categorized suggestions for improvement:
 - **Worst Times**: Early morning (1-6 AM), Mondays, Tuesdays
 - **Insights**: Peak engagement patterns
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Backend Issues
 
@@ -329,7 +329,7 @@ Error: Module not found
 - Run `npm install` again
 - Clear npm cache: `npm cache clean --force`
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 AI-powered-digital-marketing-optimizer/
@@ -354,7 +354,7 @@ AI-powered-digital-marketing-optimizer/
 └── README.md                 # This file
 ```
 
-## 🔐 Security Notes
+##  Security Notes
 
 - Never commit `.env` files to version control
 - Keep API keys secure
@@ -362,7 +362,7 @@ AI-powered-digital-marketing-optimizer/
 - Implement rate limiting for production
 - Add authentication for production deployment
 
-## 🚀 Deployment
+##  Deployment
 
 ### Backend (Python/Flask)
 - **Heroku**: `heroku create` and push
@@ -378,7 +378,7 @@ AI-powered-digital-marketing-optimizer/
 - **MongoDB Atlas**: Already cloud-hosted
 - Configure IP whitelist for production servers
 
-## 📝 Future Enhancements
+##  Future Enhancements
 
 - [ ] User authentication and accounts
 - [ ] Save and compare multiple campaigns
@@ -391,7 +391,7 @@ AI-powered-digital-marketing-optimizer/
 - [ ] Competitor analysis
 - [ ] Sentiment analysis integration
 
-## 📚 Research Paper
+##  Research Paper
 
 This project is part of a research initiative focusing on AI-powered digital marketing optimization for Sri Lankan SMEs. The research explores:
 - Deep learning for social media engagement prediction
@@ -399,11 +399,11 @@ This project is part of a research initiative focusing on AI-powered digital mar
 - Explainable AI for marketing decisions
 - Optimal timing strategies for content distribution
 
-## 👥 Contributors
+##  Contributors
 
 - Research Team - SLIIT University, Y4 S1
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - SLIIT University for research support
 - TensorFlow and Keras teams
@@ -411,14 +411,14 @@ This project is part of a research initiative focusing on AI-powered digital mar
 - EasyOCR contributors
 - Google Generative AI team
 
-## 📧 Support
+##  Support
 
 For issues, questions, or contributions:
 - Create an issue in the repository
 - Contact the research team
 - Check documentation for common issues
 
-## 📄 License
+##  License
 
 This project is developed for academic and research purposes.
 
@@ -431,4 +431,4 @@ This project is developed for academic and research purposes.
 2. Frontend: `cd frontend && npm start`
 3. Access: `http://localhost:3000`
 
-Happy Optimizing! 🚀📈
+Happy Optimizing! 
