@@ -11,6 +11,18 @@ AI-Powered Digital Marketing Optimizer is an intelligent platform that helps Sri
 - **Timing Analysis**: Optimal posting time insights based on historical trends
 - **MongoDB Integration**: Store predictions and access history
 
+## 🏗️ System Architecture
+
+The following diagram illustrates the complete system architecture and data flow:
+
+![System Architecture](images/architecture.png)
+
+The architecture consists of four main layers:
+1. **User & Frontend**: SME users interact with the prediction dashboard through the React frontend
+2. **Backend & Processing**: FastAPI backend handles requests, OCR text extraction, and preprocessing
+3. **AI Layer**: Transformer prediction model provides predictions, and the Explainability module generates improvement tips
+4. **Data Storage**: MongoDB stores and retrieves historical prediction data and insights
+
 ##  Prerequisites
 
 - Python 3.8 or higher
