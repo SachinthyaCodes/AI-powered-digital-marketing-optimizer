@@ -11,7 +11,7 @@ AI-Powered Digital Marketing Optimizer is an intelligent platform that helps Sri
 - **Timing Analysis**: Optimal posting time insights based on historical trends
 - **MongoDB Integration**: Store predictions and access history
 
-## 🏗️ System Architecture
+##  System Architecture
 
 The following diagram illustrates the complete system architecture and data flow:
 
